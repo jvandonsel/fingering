@@ -44,8 +44,8 @@ var jeffriesMap = {
 // Middle row, RH
 "R1"  :  { notes: ["c"  , "B"],  weight: 10, finger: "r1" },
 "R2"  :  { notes: ["e"  , "d"],  weight: 10, finger: "r2" },
-"R3"  :  { notes: ["g"  , "f"],  weight: 10, finger: "r3" },
-"R4"  :  { notes: ["c'" , "a"],  weight: 10, finger: "r4" },
+"R3"  :  { notes: ["g"  , "f"],  weight: 9, finger: "r3" },
+"R4"  :  { notes: ["c'" , "a"],  weight: 9, finger: "r4" },
 "R5" :   { notes: ["e'" , "b'"], weight: 10, finger: "r4" },
 
 // Bottom row, RH
@@ -274,16 +274,16 @@ function sanitizeString(input, start, len) {
 // Returns an array of Notes from the ABC string input
 function getAbcNotes(input) {
     
-    // Sanitize the input
+    // Sanitize the input, removing header and footer, but keeping
+    // the same offsets for the notes. We'll just replace header
+    // and footer sections with '*'.
     var sanitizedInput = input;
     var headerRegex = /^\w:.*$/mg;
     while (x = headerRegex.exec(input)) {
-        console.log("split input:" + x);
-        console.log("split index:" + x.index);
-        console.log("split length:" + x[0].length);
-        console.log("split input[0]:" + x[0]);
         sanitizedInput = sanitizeString(sanitizedInput, x.index, x[0].length);
     }
+
+    // TODO: sanitize embedded quotes, too
 
     console.log("sanitized input:"+sanitizedInput);
     
