@@ -3,7 +3,9 @@
 
   <head>
     <title>Concertina Fingering</title>
-    <script src="fingering.js"></script>
+    <script src="fingering.js" type="text/javascript"></script>
+    <script src="abcjs_editor_1.5-min.js" type="text/javascript"></script>
+
     <style>
       textarea {width:600px;height:200px}
     </style>
@@ -13,24 +15,17 @@
     <p>Caveats:
       <ol>
         <li>Only Jeffries button layouts supported right now.</li>
-        <li>No chords, only single melody lines are assumed.</li>
         <li>ABC with embedded quotes not supported yet.</li>
-        <li>Push/Draw bellows aren't indicated.</li>
-        <li>Button notation assumes a 30 button concertina.</li>
         <li>Not all key signatures are supported yet.</li>
-        <li>Button generation is currently arbitrary!!! Fixed soon!!!</li>
+        <li>Button generation is currently very poor. Lots of hops. To be fixed soon!</li>
         <li>Accidentals are not carried to other unmarked notes in the same measure.</li>
       </ol>
-    <p><b>Button notation:</b>The top (accidental) rows are numbered L1-L5 
-      on the left side, with L1 being the leftmost button, and R1-R5 on the right side with R1 being the leftmost button.
 
-      Likewise, L6-L10 and R6-R10 are the middle row buttons, and L11-R15 and R11-R15 are the bottom row buttons.
-    </p>
-
-    <p>After pasting in an ABC tune, copy the result into your clipboard and use it on many of the fine PDF generator sites for ABC notation.  
+    <h3>Instructions</h3>
+    <p>Paste an ABC style tune into the box below, then hit "Generate Fingerings"</p>
+    <p>Copy the result into your clipboard and use it on many of the fine PDF generator sites for ABC notation.  
       My personal favorite is <a href='http://drawthedots.com/'>Draw The Dots</a>.
-    </p>
-    Comments: jim@jimandbarb.DELETETHISPART.net
+    <p><a href='button-notation.png'>Button Notation Chart</a></p>
     <br><br>
     ABC Input:<br>
     <textarea id="input">
@@ -44,16 +39,31 @@ K: Dmaj
 A2FA     ADFD|BDGD      B2dA|FAAB     ABde|fded      Bcde|
 |f2fa      g2ge|f2fd      Bcde|f2fd    g2 (3efg|afed   Bcde|
 f2fa      g2ge|f2fd     Bcdc|defg    a2bf|afed      BcdB|
+N:This is a test.
    </textarea>
-    <br>
+    <br><br>
     <button onClick="var abc=document.getElementById('input').value;
                      var result=finger(abc);
-                     document.getElementById('output').value=result;">
+                     document.getElementById('output').value=result;
+	             abc_editor = new ABCJS.Editor('output', { paper_id: 'paper0', warnings_id:'warnings' });">
       Generate Fingerings</button>
-    <br>
+    <br><br>
     ABC Output, with fingerings:<br>
-    <textarea readonly id="output"></textarea>
+    <textarea id="output"></textarea>
 
+<div id="warnings"></div>
+<div id="paper0"></div>
+
+<script type="text/javascript">
+	window.onload = function() {
+		//abc_editor = new ABCJS.Editor("output", { paper_id: "paper0",warnings_id:"warnings" });
+        }
+</script>
+
+    <br><br>
+    <hr>
+    <p>Graphical music rendering is courtesy of the excellent <a href=' https://code.google.com/p/abcjs/'>abcjs library</a>.
+    <p>Comments: jim@jimandbarb.DELETETHISPART.net
   </body>
 
 </html>

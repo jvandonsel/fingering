@@ -9,49 +9,51 @@
 
 
 
-// TODO: fill this in with a real button map!
+// Button maps
+// Higher weights mean button is preferred
 var jeffriesMap = {
+
 // Top row, LH
-"L1"  : ["E,", "F,"],
-"L2"  : ["A,", "_B,"],
-"L3"  : ["^C,", "_E"],
-"L4"  : ["A", "G"],
-"L5"  : ["^G", "_B"],
+"L1a"  : { notes: ["E,", "F,"],  weight: 1, finger: "l4" },
+"L2a"  : { notes: ["A,", "_B,"], weight: 1, finger: "l4" },
+"L3a"  : { notes: ["^C,", "_E"], weight: 1, finger: "l3" },
+"L4a"  : { notes: ["A", "G"],    weight: 1, finger: "l2" },
+"L5a"  : { notes: ["^G", "_B"],  weight: 1, finger: "l1" },
 
 // Middle row, LH
-"L6"  : ["C,", "G,"],
-"L7"  : ["G,", "B,"],
-"L8"  : ["C" , "D"],
-"L9"  : ["E" , "F"],
-"L10" : ["G" , "A"],
+"L1"  :  { notes: ["C,", "G,"], weight: 10, finger: "l4" },
+"L2"  :  { notes: ["G,", "B,"], weight: 10, finger: "l4" },
+"L3"  :  { notes: ["C" , "D"],  weight: 10, finger: "l3" },
+"L4"  :  { notes: ["E" , "F"],  weight: 10, finger: "l2" },
+"L5"  :  { notes: ["G" , "A"],  weight: 10, finger: "l1" },
 
 // Bottom row, LH
-"L11" : ["B," , "A,"],
-"L12" : ["D"  , "^F"],
-"L13" : ["G"  , "A"],
-"L14" : ["B"  , "c"],
-"L14" : ["d"  , "e"],
+"L6"  :  { notes: ["B," , "A,"], weight: 10, finger: "l4" },
+"L7"  :  { notes: ["D"  , "^F"], weight: 9,  finger: "l4" },
+"L8"  :  { notes: ["G"  , "A"],  weight: 9,  finger: "l3" },
+"L9"  :  { notes: ["B"  , "c"],  weight: 9,  finger: "l2" },
+"L10" :  { notes: ["d"  , "e"],  weight: 9,  finger: "l1" },
 
 // Top row, RH
-"R1"  : ["^c"  , "^d"],
-"R2"  : ["a"  , "g"],
-"R3"  : ["^g"  , "_b"],
-"R4"  : ["^c'" , "_e'"],
-"R5"  : ["a''" , "f'"],
+"R1a"  :  { notes: ["^c" , "^d"],  weight: 1, finger: "r1" },
+"R2a"  :  { notes: ["a" , "g"],    weight: 1, finger: "r2" },
+"R3a"  :  { notes: ["^g", "_b"],   weight: 1, finger: "r3" },
+"R4a"  :  { notes: ["^c'", "_e'"], weight: 1, finger: "r4" },
+"R5a"  :  { notes: ["a''", "f'"],  weight: 1, finger: "r4" },
 
 // Middle row, RH
-"R6"  : ["c"  , "B"],
-"R7"  : ["e"  , "d"],
-"R8"  : ["g"  , "f"],
-"R9"  : ["c'"  , "a"],
-"R10" : ["e'"  , "b'"],
+"R1"  :  { notes: ["c"  , "B"],  weight: 10, finger: "r1" },
+"R2"  :  { notes: ["e"  , "d"],  weight: 10, finger: "r2" },
+"R3"  :  { notes: ["g"  , "f"],  weight: 10, finger: "r3" },
+"R4"  :  { notes: ["c'" , "a"],  weight: 10, finger: "r4" },
+"R5" :   { notes: ["e'" , "b'"], weight: 10, finger: "r4" },
 
 // Bottom row, RH
-"R11" : ["g"  , "^f"],
-"R12" : ["b"  , "a"],
-"R13" : ["d"  , "c'"],
-"R14" : ["g'"  , "e'"],
-"R15" : ["b"  , "^f'"]
+"R6"  :  { notes: ["g" , "^f"],  weight: 10, finger: "r1" },
+"R7"  :  { notes: ["b"  , "a"],   weight: 10, finger: "r2" },
+"R8"  :  { notes: ["d" , "c'"],  weight: 10, finger: "r3" },
+"R9"  :  { notes: ["g'", "e'"], weight: 10, finger: "r4" },
+"R10" :  { notes: ["b", "^f'"],  weight: 10, finger: "r4" },
 };
 
 var buttonToNoteMap = jeffriesMap;
@@ -115,14 +117,13 @@ var keySignatureMap = null;
 
 
 // Globals
-var noteToButtonMap;
 var abcOutput = "TODO";
 
 function finger(abcInput) {
     console.log("Got input:"+abcInput);
 
     // Find the key signature in the input
-    findKeySignature(abcInput);
+    keySignatureMap = findKeySignature(abcInput);
 
     if (keySignatureMap == null) {
         return ("ERROR: Unknown or unsupported key signature");
@@ -133,9 +134,9 @@ function finger(abcInput) {
      var notes = getAbcNotes(abcInput);
 
      // Generate the inverse mapping
-     noteToButtonMap = generateNoteToButtonMap(buttonToNoteMap);
+     var noteToButtonMap = generateNoteToButtonMap(buttonToNoteMap);
 
-     var fingerings = chooseFingerings(notes);
+     var fingerings = chooseFingerings(notes, noteToButtonMap);
      if (fingerings == null) {
          console.log("No fingerings generated!");
          return abcOutput;
@@ -161,14 +162,14 @@ function finger(abcInput) {
 
  // Determines the key signature
  // abcInput: ABC input string
- // returns: nothing
+ // returns: key signature map to use, or null on error.
 function findKeySignature(abcInput) {
     
     keySignatureMap = null;
 
     var keyMatch = abcInput.match(/[kK]: *([a-gA-G]) *(.*?)$/m);
     if (keyMatch == null || keyMatch.length < 2) {
-        return "ERROR: failed to find input ABC key signature";
+        return null;
     }
     var keySignatureBase=keyMatch[1];
     var keyExtra=keyMatch[2]==null ? "" : keyMatch[2].toLowerCase();
@@ -179,16 +180,16 @@ function findKeySignature(abcInput) {
         keyExtra.search("maj") != -1 ) {
         // Major
         console.log("Determined a major key in " + keySignatureBase);
-        keySignatureMap = majorKeyMap[keySignatureBase];
+        return majorKeyMap[keySignatureBase];
     } else if (keyExtra == "m" ||
                keyExtra.search("min") != -1) {
         // Minor
         console.log("Determined a minor key in " + keySignatureBase);
-        keySignatureMap = minorKeyMap[keySignatureBase];
+        return minorKeyMap[keySignatureBase];
     } else {
         // Unknown
         console.log("Failed to determine major/minor key signature");
-        // TODO: throw an exception
+        return null;
     }
 
 }
@@ -223,23 +224,34 @@ function mergeFingerings(input, fingerings, notes) {
 }
 
 // Chooses fingerings of for the input Note array using
-// the global buttonToNoteMap and noteToButtonMap.
-function chooseFingerings(notes) {
+function chooseFingerings(notes, noteToButtonMap) {
     console.log("Choosing fingerings...");
     var chosenButtons = [];
     for (var i = 0; i < notes.length; ++i) {
+
         var unNormalizedValue = notes[i].unNormalizedValue;
         var normalizedValue = notes[i].normalizedValue;
+
         console.log("checking note=" + unNormalizedValue + " normalized=" + normalizedValue);
+
         var buttons = noteToButtonMap[normalizedValue];
         if (buttons == null || buttons.length < 1) {
             abcOutput = "ERROR:Failed to find button for note '"+unNormalizedValue+"'";
             return null;
         }
         
-        // For now, choose first available button
-        chosenButtons.push(buttons[0]);
-        console.log("Chose button " + buttons[0] + " for note " + unNormalizedValue);
+        // For now, choose button with largest weight
+        var bestButton = null;
+        var bestWeight = 0;
+        buttons.forEach(function(b) {
+            if (b.weight > bestWeight) {
+                bestWeight = b.weight;
+                bestButton = b.button;
+            }
+        });
+
+        chosenButtons.push(bestButton);
+        console.log("Chose button " + bestButton + " for note " + unNormalizedValue);
     }
     return chosenButtons;
 }
@@ -310,21 +322,26 @@ function normalize(value) {
 
 
 // Given a button->note map, generates
-// the corresponding note->button map
+// the corresponding note->button map.
+// Returns the note->button map
 function generateNoteToButtonMap(buttonMap) {
     var noteMap = {};
-    for (var button in buttonMap) {
-        var notes = buttonMap[button];
+    for (var b in buttonMap) {
+        var notes  = buttonMap[b].notes;
+        var weight = buttonMap[b].weight;
+        var finger = buttonMap[b].finger;
         if (notes == null) {
-            console.log("Failed to find entry for button " + button);
+            console.log("Failed to find entry for button " + b);
             next;
         }
         notes.forEach(
             function(v) {
                 if (noteMap[v] == null ) { 
-                    noteMap[v]=[button];
+                    // Create a new button list for this note.
+                    noteMap[v] = [{button: b, weight: weight, finger: finger}];
                 } else {
-                    noteMap[v].push(button);
+                    // Insert this button into an existing button list for this note.
+                    noteMap[v].push({button: b, weight: weight, finger: finger});
                 }
             });
         
