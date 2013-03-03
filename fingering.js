@@ -256,28 +256,44 @@ function chooseFingerings(notes, noteToButtonMap) {
     return chosenButtons;
 }
 
+// Replaces parts of the given string with '*'
+// input: string to replace
+// start: index to start sanitizing
+// len: length to sanitize
+// Returns a new string
+function sanitizeString(input, start, len) {
+    var s = "";
+    for (var i = 0; i < len; ++i) {
+        s += "*";
+    }
+    
+    return input.substr(0, start) + s + input.substr(start+len);
+
+}
+
 // Returns an array of Notes from the ABC string input
 function getAbcNotes(input) {
     
-    // Remove lines with ':'
-    var choppedInput = input.replace(/\w:.*$/mg, "");
-
     // Sanitize the input
-    // Replace the header with a bogus character
-    //var choppedInput = input.replace(/\w:.*$/m, "");
+    var sanitizedInput = input;
+    var headerRegex = /^\w:.*$/mg;
+    while (x = headerRegex.exec(input)) {
+        console.log("split input:" + x);
+        console.log("split index:" + x.index);
+        console.log("split length:" + x[0].length);
+        console.log("split input[0]:" + x[0]);
+        sanitizedInput = sanitizeString(sanitizedInput, x.index, x[0].length);
+    }
 
-    //console.log("replaced input:"+choppedInput);
-
-    var choppedOffset = input.length - choppedInput.length;
-
+    console.log("sanitized input:"+sanitizedInput);
+    
+    // Find all the notes
     var regex = /([=^_]?[a-gA-G][',]?)/g;
     var notes = [];
-    while (m = regex.exec(choppedInput)) {
+    while (m = regex.exec(sanitizedInput)) {
         var unNormalizedValue = m[1];
         var normalizedValue = normalize(unNormalizedValue);
-        //console.log("Found note:"+unNormalizedValue+" at offset "+(m.index+choppedOffset));
-
-        notes.push(new Note((m.index+choppedOffset), unNormalizedValue, normalizedValue));
+        notes.push(new Note((m.index), unNormalizedValue, normalizedValue));
     }
 
     return notes;
