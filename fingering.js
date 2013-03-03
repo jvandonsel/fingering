@@ -77,8 +77,24 @@ var d_major_map = {
     "A" : "",
     "B" : ""
 };
-var e_major_map = {}; // TODO
-var f_major_map = {}; // TODO
+var e_major_map = {
+    "C" : "^",
+    "D" : "^",
+    "E" : "",
+    "F" : "^",
+    "G" : "^",
+    "A" : "",
+    "B" : ""
+};
+var f_major_map = {
+    "C" : "",
+    "D" : "",
+    "E" : "",
+    "F" : "",
+    "G" : "",
+    "A" : "",
+    "B" : "_"
+};
 var g_major_map = {
     "C" : "",
     "D" : "",
@@ -88,29 +104,55 @@ var g_major_map = {
     "A" : "",
     "B" : ""
 };
-var a_major_map = {}; // TODO
-var b_major_map = {}; // TODO
-
+var a_major_map = {
+    "C" : "^",
+    "D" : "",
+    "E" : "",
+    "F" : "^",
+    "G" : "^",
+    "A" : "",
+    "B" : ""
+};
+var b_major_map = {
+    "C" : "^",
+    "D" : "^",
+    "E" : "",
+    "F" : "^",
+    "G" : "^",
+    "A" : "^",
+    "B" : ""
+};
 
 var majorKeyMap = {
     "C" : c_major_map,
     "D" : d_major_map,
-    "E" : null, // e_major_map,
-    "F" : null, // f_major_map,
+    "E" : e_major_map,
+    "F" : f_major_map,
     "G" : g_major_map,
-    "A" : null, // a_major_map,
-    "B" : null, // b_major_map
+    "A" : a_major_map,
+    "B" : b_major_map
 };
 var minorKeyMap = {
     // In terms of their relative major keys
     "C" : null,
-    "D" : null,
+    "D" : f_major_map,
     "E" : g_major_map,
     "F" : null,
     "G" : null,
     "A" : c_major_map,
     "B" : d_major_map
 };
+var dorianKeyMap = {
+    // In terms of their relative major keys
+    "C" : null,
+    "D" : c_major_map,
+    "E" : null,
+    "F" : null,
+    "G" : f_major_map,
+    "A" : null,
+    "B" : null
+};
+
 
 
 var keySignatureMap = null;
@@ -175,7 +217,7 @@ function findKeySignature(abcInput) {
     var keyExtra=keyMatch[2]==null ? "" : keyMatch[2].toLowerCase();
     console.log("Got base key of '" + keySignatureBase + "' and extra of '" + keyExtra + "'");
 
-    // Determine major/minor
+    // Determine major/minor/dorian
     if (keyExtra == "" ||
         keyExtra.search("maj") != -1 ) {
         // Major
@@ -186,6 +228,10 @@ function findKeySignature(abcInput) {
         // Minor
         console.log("Determined a minor key in " + keySignatureBase);
         return minorKeyMap[keySignatureBase];
+    } else if (keyExtra.search("dor") != -1) {
+        // Dorian
+        console.log("Determined a dorian key in " + keySignatureBase);
+        return dorianKeyMap[keySignatureBase];
     } else {
         // Unknown
         console.log("Failed to determine major/minor key signature");
