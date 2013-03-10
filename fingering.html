@@ -11,23 +11,23 @@
     </style>
   </head>
   <body>
-    <h3>Prototype Anglo Concertina Fingering Generator</h3>
+    <h3>Anglo Concertina Fingering Generator</h3>
+    <p>Updated March 10, 2013
     <p>Caveats:
       <ol>
-        <li>The button selection algorithm is currently very poor. Lots of hops. To be fixed soon!</li>
-        <li>Only Jeffries button layouts supported right now.</li>
-        <li>ABC with embedded quotes not supported yet.</li>
-        <li>Not all key signatures are supported yet.</li>
-        <li>Accidentals are not carried to other unmarked notes in the same measure.</li>
+        <li>Only Jeffries C/G button layouts supported right now.</li>
+        <li>Fingering choices are still not optimal. For example, bellows usage is ignored. More work is needed here.
+        <li>Not all key signatures are supported yet. More coming soon.</li>
       </ol>
 
     <h3>Instructions</h3>
-    <p>Paste an ABC style tune into the box below, then hit "Generate Fingerings".  Review the generated fingerings and manually correct any errors in the result box.
+    <p>Paste an ABC style tune into the box below, then hit "Generate Fingerings". 
     <p>Then copy the resulting annotated ABC into your clipboard and use it on many of the fine PDF generator sites for ABC notation.  
       My personal favorite is <a href='http://drawthedots.com/'>Draw The Dots</a>.
     <p>For button notation, see the <a href='button-notation.png'>Button Notation Chart</a></p>
     <br>
     ABC Input:<br>
+
     <textarea id="input">
 X: 1
 T: Wind That Shakes The Barley, The
@@ -35,12 +35,26 @@ M: 4/4
 L: 1/8
 R: reel
 K: Dmaj
-|A2FA     ADFD|BDGD     B2dA|FAAB     ABde|fded      BcdB|
-A2FA     ADFD|BDGD      B2dA|FAAB     ABde|fded      Bcde|
-|f2fa      g2ge|f2fd      Bcde|f2fd    g2 (3efg|afed   Bcde|
+ |A2FA     ADFD|BDGD     B2dA|FAAB     ABde|fded      BcdB|
+ A2FA     ADFD|BDGD      B2dA|FAAB     ABde|fded      Bcde|
+ |f2fa      g2ge|f2fd      Bcde|f2fd    g2 (3efg|afed   Bcde|
 f2fa      g2ge|f2fd     Bcdc|defg    a2bf|afed      BcdB|
 N:This is a test.
    </textarea>
+<!--
+<textarea id="input">
+X: 1
+T: Harvest Time
+M: 2/4
+L: 1/8
+R: polka
+K: A
+|:ec d3/2f/2|ec dc|B2 ed |Bc df|
+|ec d3/2f/2|ec dc|B2 ed |Bc A2:|
+|ec ea| g3 a|ff/2e/2 fa|fe cd|
+|ec ea|fd fa|gb eg|ba a2:|
+   </textarea>
+-->
     <br><br>
     <button onClick="var abc=document.getElementById('input').value;
                      var result=finger(abc);
