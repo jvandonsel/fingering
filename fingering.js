@@ -159,7 +159,7 @@ var dorianKeyMap = {
 var abcOutput = "";
 var keySignatureMap = null;
 var bestCost;
-var bestButtonChoices = null;
+var alreadyVisited = null;
 var startTime = new Date().getTime();
 
 function log(s) {
@@ -305,40 +305,45 @@ var ButtonChoices = function(buttons, cost) {
 function chooseFingerings(notes, noteToButtonMap) {
  
     bestCost = 100000000;
-    bestButtonChoices = null;
 
-   chooseFingeringsRecursive(notes, 0, noteToButtonMap, [], 0, "", null);
-   return bestButtonChoices;
+    alreadyVisited = {};
+
+   return chooseFingeringsRecursive(notes, 0, noteToButtonMap);
+
 
 }
 
-function chooseFingeringsRecursive(notes, noteIndex, noteToButtonMap, buttonList, currentCost, lastFinger, lastButton) {
+function chooseFingeringsRecursive(notes, noteIndex, noteToButtonMap) {
 
     if (notes.length == noteIndex ) {
         // Done with notes. Bubble back up.
-        if (currentCost < bestCost) {
-            log("Got new best cost of " + currentCost);
-            bestCost = currentCost;
-            bestButtonChoices = new ButtonChoices(buttonList, currentCost);
-        }
         log("Popping up the stack");
-        return;
+        return  new ButtonChoices([], 0);
     }
+
+
 
     var note = notes[noteIndex]
     var unNormalizedValue = note.unNormalizedValue;
     var normalizedValue = note.normalizedValue;
 
-    log("["+getTime()+"] Choosing: note=" + normalizedValue + "[" + noteIndex + "] currentCost=" + currentCost);
+    log("["+getTime()+"] Choosing: note=" + normalizedValue + "[" + noteIndex + "]");
+
+    if (alreadyVisited[note]) {
+        log("Already visited note[" + note.normalizedValue + "]");
+        return alreadyVisited[note];
+    }
+
 
     // Consider all possible buttons for this note
     var buttons = noteToButtonMap[normalizedValue];
     if (buttons == null || buttons.length < 1) {
         abcOutput = "ERROR:Failed to find button for note '"+normalizedValue+"'";
         log("Failed to find button for note " + normalizedValue);
-        return;
+        return null;
     }
     
+    var bestButtonChoice = {cost:10000000, buttons:[]};
 
     for (var i = 0; i < buttons.length; ++i) {
 
@@ -346,29 +351,45 @@ function chooseFingeringsRecursive(notes, noteIndex, noteToButtonMap, buttonList
         
         log("Trying button " + b.button + " ("+ (i+1) + " of " + buttons.length + ") for note " + note.normalizedValue + "[" + noteIndex + "]");
 
-        var newButtonList = buttonList.concat(b);
-        var newCost = currentCost + b.cost;
-        var finger = b.finger;
-
-        // Penalize finger hops (same finger, different button)
-        if (finger == lastFinger && lastButton != null && lastButton.button != b.button) {
-            newCost += 100;
-            log("Penalizing finger hop for note " + note.normalizedValue);
-
-            // jvd TEST!
-            continue;
-        }
-
-        // Prune tree aggressively
-        if (newCost > bestCost) {
-            log("Pruning (newCost="+newCost+ " bestCost="+bestCost+")");
-            continue;
+        // Recurse!
+        var choice = chooseFingeringsRecursive(notes, noteIndex+1, noteToButtonMap);
+        if (choice == null) {
+            log("Could not get fingerings");
+            return null;
         }
         
-        // Recurse!
-        chooseFingeringsRecursive(notes, noteIndex+1, noteToButtonMap, newButtonList,  newCost, finger, b);
+        var newCost = b.cost;
+
+        if (choice.buttons.length != 0) {
+            var nextFinger = choice.buttons[0].finger;            
+            var nextButton = choice.buttons[0].button;
+
+            // Penalize finger hops (same finger, different button)
+            if (b.finger == nextFinger && nextButton != b.button) {
+                newCost += 100;
+                log("Penalizing finger hop for note " + note.normalizedValue);
+            }
+        }
+
+
+        log("choice had cost of " + choice.cost + " my cost=" + newCost);
+        if (choice.cost + newCost < bestButtonChoice.cost) {
+            // Best choice so far.
+            // Prepend this button to the list.
+            var newButtonList = choice.buttons.slice(0); // clone array
+            newButtonList.unshift(b);
+            bestButtonChoice = new ButtonChoices(newButtonList, choice.cost + newCost);
+            log("New best choice, cost="+bestButtonChoice.cost);
+        }
 
     }
+
+    // Memoize
+    alreadyVisited[note] = bestButtonChoice;
+    log("Saving alreadyVisited["+note.normalizedValue+"] with cost " + bestButtonChoice.cost);
+
+    return bestButtonChoice;
+
 
 }
 
