@@ -162,9 +162,14 @@ var bestCost;
 var bestButtonChoices = null;
 var startTime = new Date().getTime();
 
-function finger(abcInput) {
+function log(s) {
     if (verbose)
-        console.log("Got input:"+abcInput);
+        console.log(s);
+}
+
+function finger(abcInput) {
+
+    log("Got input:"+abcInput);
 
     // Find the key signature in the input
     keySignatureMap = findKeySignature(abcInput);
@@ -180,9 +185,13 @@ function finger(abcInput) {
      // Generate the inverse mapping
      var noteToButtonMap = generateNoteToButtonMap(buttonToNoteMap);
 
+     // Sort the inverse mapping table with the least costly buttons first.
+    // This speeds up tree pruning later
+    sortButtonMap(noteToButtonMap);
+
      var buttonChoices = chooseFingerings(notes, noteToButtonMap);
      if (buttonChoices == null) {
-         console.log("No fingerings generated!");
+         log("No fingerings generated!");
          return abcOutput;
      }
 
@@ -218,27 +227,26 @@ function findKeySignature(abcInput) {
     }
     var keySignatureBase=keyMatch[1];
     var keyExtra=keyMatch[2]==null ? "" : keyMatch[2].toLowerCase();
-    if (verbose)
-        console.log("Got base key of '" + keySignatureBase + "' and extra of '" + keyExtra + "'");
+    log("Got base key of '" + keySignatureBase + "' and extra of '" + keyExtra + "'");
 
     // Determine major/minor/dorian
     if (keyExtra == "" ||
         keyExtra.search("maj") != -1 ) {
         // Major
-        console.log("Determined a major key in " + keySignatureBase);
+        log("Determined a major key in " + keySignatureBase);
         return majorKeyMap[keySignatureBase];
     } else if (keyExtra == "m" ||
                keyExtra.search("min") != -1) {
         // Minor
-        console.log("Determined a minor key in " + keySignatureBase);
+        log("Determined a minor key in " + keySignatureBase);
         return minorKeyMap[keySignatureBase];
     } else if (keyExtra.search("dor") != -1) {
         // Dorian
-        console.log("Determined a dorian key in " + keySignatureBase);
+        log("Determined a dorian key in " + keySignatureBase);
         return dorianKeyMap[keySignatureBase];
     } else {
         // Unknown
-        console.log("Failed to determine major/minor key signature");
+        log("Failed to determine major/minor key signature");
         return null;
     }
 
@@ -265,7 +273,7 @@ function mergeFingerings(input, buttons, notes) {
         fingering = "\"" + fingering + "\"";
 
         var fingLen = fingering.length;
-        //console.log("Merge["+i+"] index="+index+" fingLen="+fingLen+" insertedTotal="+insertedTotal);
+        //log("Merge["+i+"] index="+index+" fingLen="+fingLen+" insertedTotal="+insertedTotal);
 
         result = result.substr(0, index) + fingering + result.substr(index);
 
@@ -299,7 +307,8 @@ function chooseFingerings(notes, noteToButtonMap) {
     bestCost = 100000000;
     bestButtonChoices = null;
 
-    return chooseFingeringsRecursive(notes, 0, noteToButtonMap, [], 0, "", null);
+   chooseFingeringsRecursive(notes, 0, noteToButtonMap, [], 0, "", null);
+   return bestButtonChoices;
 
 }
 
@@ -308,31 +317,26 @@ function chooseFingeringsRecursive(notes, noteIndex, noteToButtonMap, buttonList
     if (notes.length == noteIndex ) {
         // Done with notes. Bubble back up.
         if (currentCost < bestCost) {
-            if (verbose)
-                console.log("Got new best cost of " + currentCost);
+            log("Got new best cost of " + currentCost);
             bestCost = currentCost;
             bestButtonChoices = new ButtonChoices(buttonList, currentCost);
         }
-        if (verbose)
-            console.log("Popping up the stack");
-        return new ButtonChoices(buttonList, currentCost);
+        log("Popping up the stack");
+        return;
     }
 
-    // Work on the first note
     var note = notes[noteIndex]
-
     var unNormalizedValue = note.unNormalizedValue;
     var normalizedValue = note.normalizedValue;
 
-    if (verbose)
-        console.log("["+getTime()+"] Choosing: note=" + normalizedValue + "[" + noteIndex + "] currentCost=" + currentCost);
+    log("["+getTime()+"] Choosing: note=" + normalizedValue + "[" + noteIndex + "] currentCost=" + currentCost);
 
     // Consider all possible buttons for this note
     var buttons = noteToButtonMap[normalizedValue];
     if (buttons == null || buttons.length < 1) {
         abcOutput = "ERROR:Failed to find button for note '"+normalizedValue+"'";
-        console.log("Failed to find button for note " + normalizedValue);
-        return null;
+        log("Failed to find button for note " + normalizedValue);
+        return;
     }
     
 
@@ -340,8 +344,7 @@ function chooseFingeringsRecursive(notes, noteIndex, noteToButtonMap, buttonList
 
         var b = buttons[i];
         
-        if (verbose)
-            console.log("Trying button " + b.button + " ("+ (i+1) + " of " + buttons.length + ") for note " + note.normalizedValue + "[" + noteIndex + "]");
+        log("Trying button " + b.button + " ("+ (i+1) + " of " + buttons.length + ") for note " + note.normalizedValue + "[" + noteIndex + "]");
 
         var newButtonList = buttonList.concat(b);
         var newCost = currentCost + b.cost;
@@ -350,26 +353,22 @@ function chooseFingeringsRecursive(notes, noteIndex, noteToButtonMap, buttonList
         // Penalize finger hops (same finger, different button)
         if (finger == lastFinger && lastButton != null && lastButton.button != b.button) {
             newCost += 100;
-            if (verbose)
-                console.log("Penalizing finger hop for note " + note.normalizedValue);
+            log("Penalizing finger hop for note " + note.normalizedValue);
+
+            // jvd TEST!
+            continue;
         }
 
         // Prune tree aggressively
         if (newCost > bestCost) {
-            if (verbose)
-                console.log("Pruning (newCost="+newCost+ " bestCost="+bestCost+")");
+            log("Pruning (newCost="+newCost+ " bestCost="+bestCost+")");
             continue;
         }
         
         // Recurse!
-        var buttonChoices = chooseFingeringsRecursive(notes, noteIndex+1, noteToButtonMap, newButtonList,  newCost, finger, b);
-        if (buttonChoices == null) {
-            continue;
-        }
+        chooseFingeringsRecursive(notes, noteIndex+1, noteToButtonMap, newButtonList,  newCost, finger, b);
 
     }
-
-    return bestButtonChoices;
 
 }
 
@@ -403,8 +402,7 @@ function getAbcNotes(input) {
 
     // TODO: sanitize embedded quotes, too
 
-    if (verbose)
-        console.log("sanitized input:"+sanitizedInput);
+    log("sanitized input:"+sanitizedInput);
     
     // Find all the notes
     var regex = /([=^_]?[a-gA-G][',]?)/g;
@@ -442,7 +440,7 @@ function normalize(value) {
     // Find note base name
     var i = value.search(/[A-G]/i);
     if (i == -1) {
-        console.log("Failed to find basename for value!");
+        log("Failed to find basename for value!");
         return value;
     }
     var baseName = value.substr(i,1).toUpperCase();
@@ -455,6 +453,17 @@ function normalize(value) {
 
 }
 
+// Sorts the button entries in the given note->button map, with
+// the lowest cost buttons first
+function sortButtonMap(noteToButtonMap) {
+
+    for (var note in noteToButtonMap) {
+        var buttons = noteToButtonMap[note];
+
+        buttons.sort(function(a,b) {return a.cost-b.cost;});
+    }
+
+}
 
 
 // Given a button->note map, generates
@@ -468,7 +477,7 @@ function generateNoteToButtonMap(buttonMap) {
         var cost = buttonMap[b].cost;
         var finger = buttonMap[b].finger;
         if (notes == null) {
-            console.log("Failed to find entry for button " + b);
+            log("Failed to find entry for button " + b);
             next;
         }
         notes.forEach(
