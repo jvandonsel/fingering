@@ -6,9 +6,9 @@
 // for the Anglo Concertina.
 
 // Be safe!
-"use strict";
+//"use strict";
 
-var verbose = true;
+var verbose = false;
 
 // Button maps
 // Lower cost means button is preferred
@@ -37,11 +37,11 @@ var jeffriesMap = {
 "L10" :  { notes: ["d"  , "e"],  cost: 2,  finger: "l1" },
 
 // Top row, RH
-"R1a"  :  { notes: ["^c" , "^d"],  cost: 10, finger: "r1" },
-"R2a"  :  { notes: ["a" , "g"],    cost: 10, finger: "r2" },
-"R3a"  :  { notes: ["^g", "_b"],   cost: 10, finger: "r3" },
-"R4a"  :  { notes: ["^c'", "_e'"], cost: 10, finger: "r4" },
-"R5a"  :  { notes: ["a''", "f'"],  cost: 10, finger: "r4" },
+"R1a"  :  { notes: ["^d" , "^c"],  cost: 10, finger: "r1" },
+"R2a"  :  { notes: ["^c" , "^d"],    cost: 10, finger: "r2" },
+"R3a"  :  { notes: ["^g", "g"],   cost: 10, finger: "r3" },
+"R4a"  :  { notes: ["^c'", "_b'"], cost: 10, finger: "r4" },
+"R5a"  :  { notes: ["a''", "d'"],  cost: 10, finger: "r4" },
 
 // Middle row, RH
 "R1"  :  { notes: ["c"  , "B"],  cost: 1, finger: "r1" },
@@ -53,9 +53,9 @@ var jeffriesMap = {
 // Bottom row, RH
 "R6"  :  { notes: ["g" , "^f"],  cost: 1, finger: "r1" },
 "R7"  :  { notes: ["b"  , "a"],  cost: 1, finger: "r2" },
-"R8"  :  { notes: ["d" , "c'"],  cost: 1, finger: "r3" },
+"R8"  :  { notes: ["d'" , "c'"],  cost: 1, finger: "r3" },
 "R9"  :  { notes: ["g'", "e'"],  cost: 1, finger: "r4" },
-"R10" :  { notes: ["b", "^f'"],  cost: 1, finger: "r4" },
+"R10" :  { notes: ["b'", "^f'"],  cost: 1, finger: "r4" },
 };
 
 var buttonToNoteMap = jeffriesMap;
@@ -292,6 +292,16 @@ var ButtonChoices = function(buttons, cost) {
      this.cost = cost; 
  }
 
+// Determines if these two buttons would be a hop if 
+// played back-to-back
+function isHop(button1, button2) {
+    
+    // Check for finger hops (i.e. same finger, different button)
+    return (button1.finger == button2.finger && 
+            button1.button != button2.button) ;
+}
+
+
 
 // Chooses fingerings.
 // returns: a ButtonChoices object with the best button choices
@@ -330,7 +340,7 @@ function chooseFingeringsRecursive(notes, noteIndex, noteToButtonMap) {
     log("["+getTime()+"] Choosing: note=" + normalizedValue + "[" + noteIndex + "]");
 
     if (alreadyVisited[note]) {
-        log("Already visited note[" + note.normalizedValue + "]");
+        log("Already visited note[" + note.normalizedValue + "," + noteIndex + "]");
         return alreadyVisited[note];
     }
 
@@ -345,29 +355,33 @@ function chooseFingeringsRecursive(notes, noteIndex, noteToButtonMap) {
     
     var bestButtonChoice = {cost:10000000, buttons:[]};
 
+    // Recurse! Find the fingering for the rest of the tune.
+    var choice = chooseFingeringsRecursive(notes, noteIndex+1, noteToButtonMap);
+    if (choice == null) {
+        log("Could not get fingerings");
+        return null;
+    }
+
+
     for (var i = 0; i < buttons.length; ++i) {
 
         var b = buttons[i];
         
         log("Trying button " + b.button + " ("+ (i+1) + " of " + buttons.length + ") for note " + note.normalizedValue + "[" + noteIndex + "]");
 
-        // Recurse!
-        var choice = chooseFingeringsRecursive(notes, noteIndex+1, noteToButtonMap);
-        if (choice == null) {
-            log("Could not get fingerings");
-            return null;
-        }
         
         var newCost = b.cost;
+        var HOP_COST = 100;
 
         if (choice.buttons.length != 0) {
             var nextFinger = choice.buttons[0].finger;            
             var nextButton = choice.buttons[0].button;
 
-            // Penalize finger hops (same finger, different button)
-            if (b.finger == nextFinger && nextButton != b.button) {
-                newCost += 100;
+            // Check for finger hops (i.e. same finger, different button)
+            if (isHop(b, choice.buttons[0])) {
+                // Penalize finger hops (i.e. same finger, different button)
                 log("Penalizing finger hop for note " + note.normalizedValue);
+                newCost += HOP_COST;
             }
         }
 
@@ -379,14 +393,14 @@ function chooseFingeringsRecursive(notes, noteIndex, noteToButtonMap) {
             var newButtonList = choice.buttons.slice(0); // clone array
             newButtonList.unshift(b);
             bestButtonChoice = new ButtonChoices(newButtonList, choice.cost + newCost);
-            log("New best choice, cost="+bestButtonChoice.cost);
+            log("New best choice for note["+note.normalizedValue+"], cost="+bestButtonChoice.cost);
         }
 
     }
 
     // Memoize
     alreadyVisited[note] = bestButtonChoice;
-    log("Saving alreadyVisited["+note.normalizedValue+"] with cost " + bestButtonChoice.cost);
+    log("Saving alreadyVisited["+note.normalizedValue+","+noteIndex+"] with cost " + bestButtonChoice.cost);
 
     return bestButtonChoice;
 
