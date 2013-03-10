@@ -8,54 +8,54 @@
 // Be safe!
 "use strict";
 
-var verbose = false;
+var verbose = true;
 
 // Button maps
-// Higher weights mean button is preferred.
+// Lower cost means button is preferred
 // Notes are [push, pull].
 var jeffriesMap = {
 
 // Top row, LH
-"L1a"  : { notes: ["E,", "F,"],  weight: 1, finger: "l4" },
-"L2a"  : { notes: ["A,", "_B,"], weight: 1, finger: "l4" },
-"L3a"  : { notes: ["^C,", "_E"], weight: 1, finger: "l3" },
-"L4a"  : { notes: ["A", "G"],    weight: 1, finger: "l2" },
-"L5a"  : { notes: ["^G", "_B"],  weight: 1, finger: "l1" },
+"L1a"  : { notes: ["E,", "F,"],  cost: 10, finger: "l4" },
+"L2a"  : { notes: ["A,", "_B,"], cost: 10, finger: "l4" },
+"L3a"  : { notes: ["^C", "_E"], cost: 10, finger: "l3" },
+"L4a"  : { notes: ["A", "G"],    cost: 10, finger: "l2" },
+"L5a"  : { notes: ["^G", "_B"],  cost: 10, finger: "l1" },
 
 // Middle row, LH
-"L1"  :  { notes: ["C,", "G,"], weight: 10, finger: "l4" },
-"L2"  :  { notes: ["G,", "B,"], weight: 10, finger: "l4" },
-"L3"  :  { notes: ["C" , "D"],  weight: 10, finger: "l3" },
-"L4"  :  { notes: ["E" , "F"],  weight: 10, finger: "l2" },
-"L5"  :  { notes: ["G" , "A"],  weight: 10, finger: "l1" },
+"L1"  :  { notes: ["C,", "G,"], cost: 1, finger: "l4" },
+"L2"  :  { notes: ["G,", "B,"], cost: 1, finger: "l4" },
+"L3"  :  { notes: ["C" , "D"],  cost: 1, finger: "l3" },
+"L4"  :  { notes: ["E" , "F"],  cost: 1, finger: "l2" },
+"L5"  :  { notes: ["G" , "A"],  cost: 1, finger: "l1" },
 
 // Bottom row, LH
-"L6"  :  { notes: ["B," , "A,"], weight: 10, finger: "l4" },
-"L7"  :  { notes: ["D"  , "^F"], weight: 9,  finger: "l4" },
-"L8"  :  { notes: ["G"  , "A"],  weight: 9,  finger: "l3" },
-"L9"  :  { notes: ["B"  , "c"],  weight: 9,  finger: "l2" },
-"L10" :  { notes: ["d"  , "e"],  weight: 9,  finger: "l1" },
+"L6"  :  { notes: ["B," , "A,"], cost: 1, finger: "l4" },
+"L7"  :  { notes: ["D"  , "^F"], cost: 2,  finger: "l4" },
+"L8"  :  { notes: ["G"  , "A"],  cost: 2,  finger: "l3" },
+"L9"  :  { notes: ["B"  , "c"],  cost: 2,  finger: "l2" },
+"L10" :  { notes: ["d"  , "e"],  cost: 2,  finger: "l1" },
 
 // Top row, RH
-"R1a"  :  { notes: ["^c" , "^d"],  weight: 1, finger: "r1" },
-"R2a"  :  { notes: ["a" , "g"],    weight: 1, finger: "r2" },
-"R3a"  :  { notes: ["^g", "_b"],   weight: 1, finger: "r3" },
-"R4a"  :  { notes: ["^c'", "_e'"], weight: 1, finger: "r4" },
-"R5a"  :  { notes: ["a''", "f'"],  weight: 1, finger: "r4" },
+"R1a"  :  { notes: ["^c" , "^d"],  cost: 10, finger: "r1" },
+"R2a"  :  { notes: ["a" , "g"],    cost: 10, finger: "r2" },
+"R3a"  :  { notes: ["^g", "_b"],   cost: 10, finger: "r3" },
+"R4a"  :  { notes: ["^c'", "_e'"], cost: 10, finger: "r4" },
+"R5a"  :  { notes: ["a''", "f'"],  cost: 10, finger: "r4" },
 
 // Middle row, RH
-"R1"  :  { notes: ["c"  , "B"],  weight: 10, finger: "r1" },
-"R2"  :  { notes: ["e"  , "d"],  weight: 10, finger: "r2" },
-"R3"  :  { notes: ["g"  , "f"],  weight: 9, finger: "r3" },
-"R4"  :  { notes: ["c'" , "a"],  weight: 9, finger: "r4" },
-"R5" :   { notes: ["e'" , "b'"], weight: 10, finger: "r4" },
+"R1"  :  { notes: ["c"  , "B"],  cost: 1, finger: "r1" },
+"R2"  :  { notes: ["e"  , "d"],  cost: 1, finger: "r2" },
+"R3"  :  { notes: ["g"  , "f"],  cost: 2, finger: "r3" },
+"R4"  :  { notes: ["c'" , "a"],  cost: 2, finger: "r4" },
+"R5" :   { notes: ["e'" , "b'"], cost: 1, finger: "r4" },
 
 // Bottom row, RH
-"R6"  :  { notes: ["g" , "^f"],  weight: 10, finger: "r1" },
-"R7"  :  { notes: ["b"  , "a"],   weight: 10, finger: "r2" },
-"R8"  :  { notes: ["d" , "c'"],  weight: 10, finger: "r3" },
-"R9"  :  { notes: ["g'", "e'"], weight: 10, finger: "r4" },
-"R10" :  { notes: ["b", "^f'"],  weight: 10, finger: "r4" },
+"R6"  :  { notes: ["g" , "^f"],  cost: 1, finger: "r1" },
+"R7"  :  { notes: ["b"  , "a"],  cost: 1, finger: "r2" },
+"R8"  :  { notes: ["d" , "c'"],  cost: 1, finger: "r3" },
+"R9"  :  { notes: ["g'", "e'"],  cost: 1, finger: "r4" },
+"R10" :  { notes: ["b", "^f'"],  cost: 1, finger: "r4" },
 };
 
 var buttonToNoteMap = jeffriesMap;
@@ -158,7 +158,8 @@ var dorianKeyMap = {
 // Globals
 var abcOutput = "";
 var keySignatureMap = null;
-var bestWeight = 0;
+var bestCost;
+var bestButtonChoices = null;
 var startTime = new Date().getTime();
 
 function finger(abcInput) {
@@ -179,8 +180,7 @@ function finger(abcInput) {
      // Generate the inverse mapping
      var noteToButtonMap = generateNoteToButtonMap(buttonToNoteMap);
 
-     bestWeight = 0;
-     var buttonChoices = chooseFingerings(notes, noteToButtonMap, [], 0, "", 0);
+     var buttonChoices = chooseFingerings(notes, noteToButtonMap);
      if (buttonChoices == null) {
          console.log("No fingerings generated!");
          return abcOutput;
@@ -278,18 +278,14 @@ function mergeFingerings(input, buttons, notes) {
 // Button Choice constructor.
 //
 // buttons: list of buttons, each one a string like "L1"
-// weight: integer weight of total set of buttons, bigger is better
-var ButtonChoices = function(buttons, weight) {
+// cost: integer cost of total set of buttons, lower is better
+var ButtonChoices = function(buttons, cost) {
      this.buttons = buttons; 
-     this.weight = weight; 
+     this.cost = cost; 
  }
 
 
 // Chooses fingerings.
-// notes: array of Note objects.
-// noteToButtonMap: map of note names to buttons.
-// buttonList: buttons chosen so far
-// currentWeight: weight of buttons chosen so far
 // returns: a ButtonChoices object with the best button choices
 // 
 // This is the guts of this program.  Uses various
@@ -298,74 +294,79 @@ var ButtonChoices = function(buttons, weight) {
 //
 // Recursively chooses the best fingering from
 // all possible fingerings.
-function chooseFingerings(notes, noteToButtonMap, buttonList, currentWeight, lastFinger, depth) {
+function chooseFingerings(notes, noteToButtonMap) {
+ 
+    bestCost = 100000000;
+    bestButtonChoices = null;
 
-    var chosenButtons = [];
+    return chooseFingeringsRecursive(notes, 0, noteToButtonMap, [], 0, "", null);
 
-    if (notes.length == 0 ) {
+}
+
+function chooseFingeringsRecursive(notes, noteIndex, noteToButtonMap, buttonList, currentCost, lastFinger, lastButton) {
+
+    if (notes.length == noteIndex ) {
         // Done with notes. Bubble back up.
-        if (currentWeight > bestWeight) {
-            bestWeight = currentWeight;
-            bestButtons
+        if (currentCost < bestCost) {
+            if (verbose)
+                console.log("Got new best cost of " + currentCost);
+            bestCost = currentCost;
+            bestButtonChoices = new ButtonChoices(buttonList, currentCost);
         }
         if (verbose)
             console.log("Popping up the stack");
-        return new ButtonChoices(buttonList, currentWeight);
+        return new ButtonChoices(buttonList, currentCost);
     }
 
     // Work on the first note
-    var note = notes[0];
-    // Make a copy of the remaining notes
-    var remainingNotes = notes.slice(1);
+    var note = notes[noteIndex]
 
     var unNormalizedValue = note.unNormalizedValue;
     var normalizedValue = note.normalizedValue;
 
     if (verbose)
-        console.log("["+getTime()+"] Choosing: (" + notes.length + ") note=" + unNormalizedValue + " normalized=" + normalizedValue + " currentWeight=" + currentWeight + " depth=" + depth);
+        console.log("["+getTime()+"] Choosing: note=" + normalizedValue + "[" + noteIndex + "] currentCost=" + currentCost);
 
     // Consider all possible buttons for this note
     var buttons = noteToButtonMap[normalizedValue];
     if (buttons == null || buttons.length < 1) {
-        abcOutput = "ERROR:Failed to find button for note '"+unNormalizedValue+"'";
-        console.log("Failed to find button for note " + unNormalizedValue);
+        abcOutput = "ERROR:Failed to find button for note '"+normalizedValue+"'";
+        console.log("Failed to find button for note " + normalizedValue);
         return null;
     }
     
-
-    var bestWeight = 0;
-    var bestButtonChoices = null;
 
     for (var i = 0; i < buttons.length; ++i) {
 
         var b = buttons[i];
         
         if (verbose)
-            console.log("Trying button " + b.button + " ("+ i + " of " + buttons.length + ") for note " + note.normalizedValue);
+            console.log("Trying button " + b.button + " ("+ (i+1) + " of " + buttons.length + ") for note " + note.normalizedValue + "[" + noteIndex + "]");
 
         var newButtonList = buttonList.concat(b);
-        var newWeight = currentWeight + b.weight;
+        var newCost = currentCost + b.cost;
         var finger = b.finger;
 
-        if (finger == lastFinger) {
-            // Penalize finger hops
-            newWeight -= 20;
+        // Penalize finger hops (same finger, different button)
+        if (finger == lastFinger && lastButton != null && lastButton.button != b.button) {
+            newCost += 100;
             if (verbose)
                 console.log("Penalizing finger hop for note " + note.normalizedValue);
         }
+
+        // Prune tree aggressively
+        if (newCost > bestCost) {
+            if (verbose)
+                console.log("Pruning (newCost="+newCost+ " bestCost="+bestCost+")");
+            continue;
+        }
         
         // Recurse!
-        var buttonChoices = chooseFingerings(remainingNotes, noteToButtonMap, newButtonList,  newWeight, finger,  depth+1);
+        var buttonChoices = chooseFingeringsRecursive(notes, noteIndex+1, noteToButtonMap, newButtonList,  newCost, finger, b);
         if (buttonChoices == null) {
             continue;
         }
 
-        if (buttonChoices.weight > bestWeight) {
-            if (verbose)
-                console.log("Got new best button " + b.button +  " for note " + note.normalizedValue);
-            bestWeight = buttonChoices.weight;
-            bestButtonChoices = buttonChoices;
-        }
     }
 
     return bestButtonChoices;
@@ -458,13 +459,13 @@ function normalize(value) {
 
 // Given a button->note map, generates
 // the corresponding note->button map.
-// The values of this map have {button, weight, finger}.
+// The values of this map have {button, cost, finger}.
 // Returns the note->button map
 function generateNoteToButtonMap(buttonMap) {
     var noteMap = {};
     for (var b in buttonMap) {
         var notes  = buttonMap[b].notes;
-        var weight = buttonMap[b].weight;
+        var cost = buttonMap[b].cost;
         var finger = buttonMap[b].finger;
         if (notes == null) {
             console.log("Failed to find entry for button " + b);
@@ -474,10 +475,10 @@ function generateNoteToButtonMap(buttonMap) {
             function(v) {
                 if (noteMap[v] == null ) { 
                     // Create a new button list for this note.
-                    noteMap[v] = [{button: b, weight: weight, finger: finger}];
+                    noteMap[v] = [{button: b, cost: cost, finger: finger}];
                 } else {
                     // Insert this button into an existing button list for this note.
-                    noteMap[v].push({button: b, weight: weight, finger: finger});
+                    noteMap[v].push({button: b, cost: cost, finger: finger});
                 }
             });
         
