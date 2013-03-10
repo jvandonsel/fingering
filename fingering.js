@@ -5,6 +5,10 @@
 // Annotates an ABC format tune with semi-optimal fingerings
 // for the Anglo Concertina.
 
+// Be safe!
+"use strict";
+
+var verbose = false;
 
 // Button maps
 // Higher weights mean button is preferred.
@@ -155,9 +159,11 @@ var dorianKeyMap = {
 var abcOutput = "";
 var keySignatureMap = null;
 var bestWeight = 0;
+var startTime = new Date().getTime();
 
 function finger(abcInput) {
-    console.log("Got input:"+abcInput);
+    if (verbose)
+        console.log("Got input:"+abcInput);
 
     // Find the key signature in the input
     keySignatureMap = findKeySignature(abcInput);
@@ -174,7 +180,7 @@ function finger(abcInput) {
      var noteToButtonMap = generateNoteToButtonMap(buttonToNoteMap);
 
      bestWeight = 0;
-     var buttonChoices = chooseFingerings(notes, noteToButtonMap, [], 0);
+     var buttonChoices = chooseFingerings(notes, noteToButtonMap, [], 0, "", 0);
      if (buttonChoices == null) {
          console.log("No fingerings generated!");
          return abcOutput;
@@ -212,7 +218,8 @@ function findKeySignature(abcInput) {
     }
     var keySignatureBase=keyMatch[1];
     var keyExtra=keyMatch[2]==null ? "" : keyMatch[2].toLowerCase();
-    console.log("Got base key of '" + keySignatureBase + "' and extra of '" + keyExtra + "'");
+    if (verbose)
+        console.log("Got base key of '" + keySignatureBase + "' and extra of '" + keyExtra + "'");
 
     // Determine major/minor/dorian
     if (keyExtra == "" ||
@@ -291,7 +298,7 @@ var ButtonChoices = function(buttons, weight) {
 //
 // Recursively chooses the best fingering from
 // all possible fingerings.
-function chooseFingerings(notes, noteToButtonMap, buttonList, currentWeight) {
+function chooseFingerings(notes, noteToButtonMap, buttonList, currentWeight, lastFinger, depth) {
 
     var chosenButtons = [];
 
@@ -301,7 +308,8 @@ function chooseFingerings(notes, noteToButtonMap, buttonList, currentWeight) {
             bestWeight = currentWeight;
             bestButtons
         }
-        console.log("Popping up the stack");
+        if (verbose)
+            console.log("Popping up the stack");
         return new ButtonChoices(buttonList, currentWeight);
     }
 
@@ -313,7 +321,8 @@ function chooseFingerings(notes, noteToButtonMap, buttonList, currentWeight) {
     var unNormalizedValue = note.unNormalizedValue;
     var normalizedValue = note.normalizedValue;
 
-    console.log("Choosing: note=" + unNormalizedValue + " normalized=" + normalizedValue + " currentWeight=" + currentWeight);
+    if (verbose)
+        console.log("["+getTime()+"] Choosing: (" + notes.length + ") note=" + unNormalizedValue + " normalized=" + normalizedValue + " currentWeight=" + currentWeight + " depth=" + depth);
 
     // Consider all possible buttons for this note
     var buttons = noteToButtonMap[normalizedValue];
@@ -330,20 +339,30 @@ function chooseFingerings(notes, noteToButtonMap, buttonList, currentWeight) {
     for (var i = 0; i < buttons.length; ++i) {
 
         var b = buttons[i];
-
-        console.log("Trying button " + b.button + " ("+ i + " of " + buttons.length + ") for note " + note.normalizedValue);
+        
+        if (verbose)
+            console.log("Trying button " + b.button + " ("+ i + " of " + buttons.length + ") for note " + note.normalizedValue);
 
         var newButtonList = buttonList.concat(b);
         var newWeight = currentWeight + b.weight;
+        var finger = b.finger;
+
+        if (finger == lastFinger) {
+            // Penalize finger hops
+            newWeight -= 20;
+            if (verbose)
+                console.log("Penalizing finger hop for note " + note.normalizedValue);
+        }
         
         // Recurse!
-        var buttonChoices = chooseFingerings(remainingNotes, noteToButtonMap, newButtonList,  newWeight);
+        var buttonChoices = chooseFingerings(remainingNotes, noteToButtonMap, newButtonList,  newWeight, finger,  depth+1);
         if (buttonChoices == null) {
             continue;
         }
 
         if (buttonChoices.weight > bestWeight) {
-            console.log("Got new best button " + b.button +  " for note " + note.normalizedValue);
+            if (verbose)
+                console.log("Got new best button " + b.button +  " for note " + note.normalizedValue);
             bestWeight = buttonChoices.weight;
             bestButtonChoices = buttonChoices;
         }
@@ -376,17 +395,20 @@ function getAbcNotes(input) {
     // and footer sections with '*'.
     var sanitizedInput = input;
     var headerRegex = /^\w:.*$/mg;
+    var x;
     while (x = headerRegex.exec(input)) {
         sanitizedInput = sanitizeString(sanitizedInput, x.index, x[0].length);
     }
 
     // TODO: sanitize embedded quotes, too
 
-    console.log("sanitized input:"+sanitizedInput);
+    if (verbose)
+        console.log("sanitized input:"+sanitizedInput);
     
     // Find all the notes
     var regex = /([=^_]?[a-gA-G][',]?)/g;
     var notes = [];
+    var m;
     while (m = regex.exec(sanitizedInput)) {
         var unNormalizedValue = m[1];
         var normalizedValue = normalize(unNormalizedValue);
@@ -461,4 +483,8 @@ function generateNoteToButtonMap(buttonMap) {
         
     }
     return noteMap;
+}
+
+function getTime() {
+    return (new Date().getTime() - startTime) / 1000;
 }
