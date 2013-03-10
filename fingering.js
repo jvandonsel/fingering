@@ -6,11 +6,9 @@
 // for the Anglo Concertina.
 
 
-
-
-
 // Button maps
-// Higher weights mean button is preferred
+// Higher weights mean button is preferred.
+// Notes are [push, pull].
 var jeffriesMap = {
 
 // Top row, LH
@@ -153,13 +151,10 @@ var dorianKeyMap = {
     "B" : null
 };
 
-
-
-var keySignatureMap = null;
-
-
 // Globals
-var abcOutput = "TODO";
+var abcOutput = "";
+var keySignatureMap = null;
+var bestWeight = 0;
 
 function finger(abcInput) {
     console.log("Got input:"+abcInput);
@@ -178,13 +173,15 @@ function finger(abcInput) {
      // Generate the inverse mapping
      var noteToButtonMap = generateNoteToButtonMap(buttonToNoteMap);
 
-     var fingerings = chooseFingerings(notes, noteToButtonMap);
-     if (fingerings == null) {
+     bestWeight = 0;
+     var buttonChoices = chooseFingerings(notes, noteToButtonMap, [], 0);
+     if (buttonChoices == null) {
          console.log("No fingerings generated!");
          return abcOutput;
      }
 
-     abcOutput = mergeFingerings(abcInput, fingerings, notes);
+     // Merge the chosen fingerings with the ABC notation
+     abcOutput = mergeFingerings(abcInput, buttonChoices.buttons, notes);
 
      return abcOutput;
 
@@ -241,27 +238,29 @@ function findKeySignature(abcInput) {
 }
 
 
-// Merges an array of fingering strings with an array of Notes
+// Merges an array of Button objects with an array of Notes
 // with the original string input.
 // Returns a merged string.
-function mergeFingerings(input, fingerings, notes) {
-    if (fingerings.length != notes.length) {
+function mergeFingerings(input, buttons, notes) {
+    if (buttons.length != notes.length) {
         return "ERROR: Internal error. Length mismatch";
     }
 
     var result = input;
     var insertedTotal = 0;
-    for (var i = 0; i < fingerings.length; ++i) {
+    for (var i = 0; i < buttons.length; ++i) {
 
         var index = notes[i].index + insertedTotal;
 
-        // Add double quotes to fingering
-        fingerings[i] = "\"" + fingerings[i] + "\"";
+        var fingering = buttons[i].button;
 
-        var fingLen = fingerings[i].length;
+        // Add double quotes to fingering
+        fingering = "\"" + fingering + "\"";
+
+        var fingLen = fingering.length;
         //console.log("Merge["+i+"] index="+index+" fingLen="+fingLen+" insertedTotal="+insertedTotal);
 
-        result = result.substr(0, index) + fingerings[i] + result.substr(index);
+        result = result.substr(0, index) + fingering + result.substr(index);
 
         insertedTotal += fingLen;
     }
@@ -269,37 +268,89 @@ function mergeFingerings(input, fingerings, notes) {
     return result;
 }
 
-// Chooses fingerings of for the input Note array using
-function chooseFingerings(notes, noteToButtonMap) {
-    console.log("Choosing fingerings...");
+// Button Choice constructor.
+//
+// buttons: list of buttons, each one a string like "L1"
+// weight: integer weight of total set of buttons, bigger is better
+var ButtonChoices = function(buttons, weight) {
+     this.buttons = buttons; 
+     this.weight = weight; 
+ }
+
+
+// Chooses fingerings.
+// notes: array of Note objects.
+// noteToButtonMap: map of note names to buttons.
+// buttonList: buttons chosen so far
+// currentWeight: weight of buttons chosen so far
+// returns: a ButtonChoices object with the best button choices
+// 
+// This is the guts of this program.  Uses various
+// heuristics to choose semi-optimal fingerings
+// for the given note sequence. 
+//
+// Recursively chooses the best fingering from
+// all possible fingerings.
+function chooseFingerings(notes, noteToButtonMap, buttonList, currentWeight) {
+
     var chosenButtons = [];
-    for (var i = 0; i < notes.length; ++i) {
 
-        var unNormalizedValue = notes[i].unNormalizedValue;
-        var normalizedValue = notes[i].normalizedValue;
-
-        console.log("checking note=" + unNormalizedValue + " normalized=" + normalizedValue);
-
-        var buttons = noteToButtonMap[normalizedValue];
-        if (buttons == null || buttons.length < 1) {
-            abcOutput = "ERROR:Failed to find button for note '"+unNormalizedValue+"'";
-            return null;
+    if (notes.length == 0 ) {
+        // Done with notes. Bubble back up.
+        if (currentWeight > bestWeight) {
+            bestWeight = currentWeight;
+            bestButtons
         }
-        
-        // For now, choose button with largest weight
-        var bestButton = null;
-        var bestWeight = 0;
-        buttons.forEach(function(b) {
-            if (b.weight > bestWeight) {
-                bestWeight = b.weight;
-                bestButton = b.button;
-            }
-        });
-
-        chosenButtons.push(bestButton);
-        console.log("Chose button " + bestButton + " for note " + unNormalizedValue);
+        console.log("Popping up the stack");
+        return new ButtonChoices(buttonList, currentWeight);
     }
-    return chosenButtons;
+
+    // Work on the first note
+    var note = notes[0];
+    // Make a copy of the remaining notes
+    var remainingNotes = notes.slice(1);
+
+    var unNormalizedValue = note.unNormalizedValue;
+    var normalizedValue = note.normalizedValue;
+
+    console.log("Choosing: note=" + unNormalizedValue + " normalized=" + normalizedValue + " currentWeight=" + currentWeight);
+
+    // Consider all possible buttons for this note
+    var buttons = noteToButtonMap[normalizedValue];
+    if (buttons == null || buttons.length < 1) {
+        abcOutput = "ERROR:Failed to find button for note '"+unNormalizedValue+"'";
+        console.log("Failed to find button for note " + unNormalizedValue);
+        return null;
+    }
+    
+
+    var bestWeight = 0;
+    var bestButtonChoices = null;
+
+    for (var i = 0; i < buttons.length; ++i) {
+
+        var b = buttons[i];
+
+        console.log("Trying button " + b.button + " ("+ i + " of " + buttons.length + ") for note " + note.normalizedValue);
+
+        var newButtonList = buttonList.concat(b);
+        var newWeight = currentWeight + b.weight;
+        
+        // Recurse!
+        var buttonChoices = chooseFingerings(remainingNotes, noteToButtonMap, newButtonList,  newWeight);
+        if (buttonChoices == null) {
+            continue;
+        }
+
+        if (buttonChoices.weight > bestWeight) {
+            console.log("Got new best button " + b.button +  " for note " + note.normalizedValue);
+            bestWeight = buttonChoices.weight;
+            bestButtonChoices = buttonChoices;
+        }
+    }
+
+    return bestButtonChoices;
+
 }
 
 // Replaces parts of the given string with '*'
@@ -385,6 +436,7 @@ function normalize(value) {
 
 // Given a button->note map, generates
 // the corresponding note->button map.
+// The values of this map have {button, weight, finger}.
 // Returns the note->button map
 function generateNoteToButtonMap(buttonMap) {
     var noteMap = {};
