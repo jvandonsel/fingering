@@ -124,34 +124,79 @@ function finger(abcInput) {
  // returns: key signature map to use, or null on error.
 function findKeySignature(abcInput) {
 
-    var keyMatch = abcInput.match(/[kK]: *([a-gA-G]) *(.*?)$/m);
-    if (keyMatch == null || keyMatch.length < 2) {
+    var myMap = null;
+
+    var keyMatch = abcInput.match(/[kK]: *([A-G])([b#])? *(.*?)$/m);
+    if (keyMatch == null || keyMatch.length < 3) {
         return null;
     }
-    var keySignatureBase=keyMatch[1];
-    var keyExtra=keyMatch[2]==null ? "" : keyMatch[2].toLowerCase();
+
+    var keySignatureBase;
+    var keyExtra;
+
+    if (keyMatch[2] == undefined) {
+        keySignatureBase = keyMatch[1];
+    }
+    else {
+        keySignatureBase = keyMatch[1] + keyMatch[2];
+    }
+    keyExtra = keyMatch[3].toLowerCase();
+
+
     log("Got base key of '" + keySignatureBase + "' and extra of '" + keyExtra + "'");
 
-    // Determine major/minor/dorian
+    // Determine musical mode
     if (keyExtra == "" ||
-        keyExtra.search("maj") != -1 ) {
-        // Major
-        log("Determined a major key in " + keySignatureBase);
-        return keySignatureMap(keySignatureBase, 0);
-    } else if (keyExtra == "m" ||
-               keyExtra.search("min") != -1) {
-        // Minor
-        log("Determined a minor key in " + keySignatureBase);
-        return keySignatureMap(keySignatureBase, 3);
+        keyExtra.search("maj") != -1 ||
+        keyExtra.search("ion") != -1) {
+        log("Mode: Ionian (major)");
+        myMap = keySignatureMap(keySignatureBase, 0);
+    } else if (keyExtra.search("mix") != -1) {
+        log("Mode: Mixolydian");
+        myMap = keySignatureMap(keySignatureBase, 1);
     } else if (keyExtra.search("dor") != -1) {
-        // Dorian
-        log("Determined a dorian key in " + keySignatureBase);
-        return keySignatureMap(keySignatureBase, 2);
+        log("Mode: Dorian");
+        myMap = keySignatureMap(keySignatureBase, 2);
+    } else if ((keyExtra.search("m") != -1 && keyExtra.search("mix") == -1) ||
+               keyExtra.search("min") != -1 ||
+               keyExtra.search("aeo") != -1) {
+        log("Mode: Aeolian (minor)");
+        myMap = keySignatureMap(keySignatureBase, 3);
+    } else if (keyExtra.search("phr") != -1) {
+        log("Mode: Phrygian");
+        myMap = keySignatureMap(keySignatureBase, 4);
+    } else if (keyExtra.search("loc") != -1) {
+        log("Mode: Locrian");
+        myMap = keySignatureMap(keySignatureBase, 5);
+    } else if (keyExtra.search("lyd") != -1) {
+        log("Mode: Lydian");
+        myMap = keySignatureMap(keySignatureBase, -1);
+    } else if (keyExtra.search("exp") != -1) {
+        log("(Accidentals to be explicitly specified)");
+        myMap = keySignatureMap("C", 0);
     } else {
         // Unknown
-        log("Failed to determine major/minor key signature");
-        return null;
+        log("Failed to determine key signature mode");
+        myMap = null;
     }
+
+    if (myMap == null) {
+        return myMap;
+    }
+
+    //Handle explicit accidentals
+    var explicitFlats = keyExtra.match(/_./g);
+    var explicitSharps = keyExtra.match(/\^./g);
+
+    for (note in explicitFlats) {
+        myMap.flats += explicitFlats[note][1].toUpperCase();
+    }
+
+    for (note in explicitSharps) {
+        myMap.sharps += explicitSharps[note][1].toUpperCase();
+    }
+
+    return myMap;
 
 }
 
@@ -294,9 +339,15 @@ function chooseFingeringsRecursive(notes, noteIndex, noteToButtonMap) {
     // Consider all possible buttons for this note
     var buttons = noteToButtonMap[normalizedValue];
     if (buttons == null || buttons.length < 1) {
-        abcOutput = "ERROR:Failed to find button for note '"+normalizedValue+"'";
         log("Failed to find button for note " + normalizedValue);
-        return null;
+        log("Attempting respell...");
+        var otherName = respell(normalizedValue);
+        buttons = noteToButtonMap[otherName];
+        if (buttons == null || buttons.length < 1) {
+            log("Respelling as " + otherName + " failed to find a button.");
+            abcOutput = "ERROR:Failed to find button for note '" + normalizedValue + "'";
+            return null;
+        }
     }
     
     var bestButtonChoice = {cost:10000000, buttons:[]};
@@ -398,6 +449,36 @@ function getAbcNotes(input) {
     return notes;
 }
 
+function respell(note) {
+    var ret = note;
+    // enharmonic respellings
+    var respellings = {
+        //    "_A": "^G",
+        "^A": "_B",
+        //    "_B": "^A",
+        //    "B": "_C",
+        "^B": "C",
+        "_C": "B",
+        //    "C": "^B",
+        //    "^C": "_D",
+        "_D": "^C",
+        "^D": "_E",
+        //    "_E": "^D",
+        //    "E": "_F",
+        "^E": "F",
+        "_F": "E",
+        //    "F": "^E",
+        //    "^F": "_G",
+        "_G": "^F",
+        "^G": "_A"
+    }
+    for (x in respellings) {
+        ret = ret.replace(x, respellings[x]);
+        ret = ret.replace(x.toLowerCase(), respellings[x].toLowerCase());
+    }
+    return ret;
+}
+
 // Normalizes the given note string, given the key signature.
 // This means making sharps or flats explicit, and removing
 // extraneous natural signs.
@@ -460,6 +541,7 @@ function sortButtonMap(noteToButtonMap) {
 
 // Given a button->note map, generates
 // the corresponding note->button map.
+// Keys of this map are filtered through "respell".
 // The values of this map have {button, cost, finger}.
 // Returns the note->button map
 function generateNoteToButtonMap(buttonMap) {
@@ -473,7 +555,8 @@ function generateNoteToButtonMap(buttonMap) {
             next;
         }
         notes.forEach(
-            function(v) {
+            function (v) {
+                v = respell(v);
                 if (noteMap[v] == null ) { 
                     // Create a new button list for this note.
                     noteMap[v] = [{button: b, cost: cost, finger: finger}];
