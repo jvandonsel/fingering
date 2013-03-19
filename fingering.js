@@ -437,13 +437,20 @@ function getAbcNotes(input) {
     log("sanitized input:"+sanitizedInput);
     
     // Find all the notes
-    var regex = /([=^_]?[a-gA-G][',]?)/g;
+    var regex = /([=^_]?[a-gA-G][',]?|\|)/g;
     var notes = [];
     var m;
     while (m = regex.exec(sanitizedInput)) {
         var unNormalizedValue = m[1];
-        var normalizedValue = normalize(unNormalizedValue);
-        notes.push(new Note((m.index), unNormalizedValue, normalizedValue));
+        if (unNormalizedValue == "|") {
+            keySignature.accidentalFlats = "";
+            keySignature.accidentalSharps = "";
+            keySignature.accidentalNaturals = "";
+        }
+        else {
+            var normalizedValue = normalize(unNormalizedValue);
+            notes.push(new Note((m.index), unNormalizedValue, normalizedValue));
+        }
     }
 
     return notes;
@@ -482,22 +489,8 @@ function respell(note) {
 // Normalizes the given note string, given the key signature.
 // This means making sharps or flats explicit, and removing
 // extraneous natural signs.
-// FIXME: this doesn't preserve accidentals within a measure!
 // Returns the normalized note string.
 function normalize(value) {
-
-    // Does it have a natural?
-    if (value.substr(0,1) == "=") {
-        // Yes. Remove it.
-        return value.substr(1);
-    }
-
-    // Does it already have an accidental?
-    if (value.substr(0,1) == "_" ||
-        value.substr(0,1) == "^") {
-        // Leave it intact
-        return value;
-    }
 
     // Find note base name
     var i = value.search(/[A-G]/i);
@@ -507,6 +500,29 @@ function normalize(value) {
     }
     var baseName = value.substr(i,1).toUpperCase();
     
+    // Does it have a natural?
+    if (value.substr(0, 1) == "=") {
+        keySignature.accidentalFlats = keySignature.accidentalFlats.replace(baseName, "");
+        keySignature.accidentalSharps = keySignature.accidentalSharps.replace(baseName, "");
+        keySignature.accidentalNaturals += baseName;
+        return value.substr(1);
+    }
+
+    // Does it already have an accidental?
+    if (value.substr(0, 1) == "_") {
+        keySignature.accidentalFlats += baseName;
+        keySignature.accidentalSharps = keySignature.accidentalSharps.replace(baseName, "");
+        keySignature.accidentalNaturals = keySignature.accidentalNaturals.replace(baseName, "");
+        return value;
+    }
+
+    if (value.substr(0, 1) == "^") {
+        keySignature.accidentalFlats = keySignature.accidentalFlats.replace(baseName, "");
+        keySignature.accidentalNaturals = keySignature.accidentalNaturals.replace(baseName, "");
+        keySignature.accidentalSharps += baseName;
+        return value;
+    }
+
     // Transform to key signature
 
     if (keySignature.accidentalNaturals.search(baseName) != -1) {
