@@ -60,104 +60,9 @@ var jeffriesMap = {
 
 var buttonToNoteMap = jeffriesMap;
 
-// Key signature maps
-var c_major_map = {
-    "C" : "",
-    "D" : "",
-    "E" : "",
-    "F" : "",
-    "G" : "",
-    "A" : "",
-    "B" : ""
-};
-var d_major_map = {
-    "C" : "^",
-    "D" : "",
-    "E" : "",
-    "F" : "^",
-    "G" : "",
-    "A" : "",
-    "B" : ""
-};
-var e_major_map = {
-    "C" : "^",
-    "D" : "^",
-    "E" : "",
-    "F" : "^",
-    "G" : "^",
-    "A" : "",
-    "B" : ""
-};
-var f_major_map = {
-    "C" : "",
-    "D" : "",
-    "E" : "",
-    "F" : "",
-    "G" : "",
-    "A" : "",
-    "B" : "_"
-};
-var g_major_map = {
-    "C" : "",
-    "D" : "",
-    "E" : "",
-    "F" : "^",
-    "G" : "",
-    "A" : "",
-    "B" : ""
-};
-var a_major_map = {
-    "C" : "^",
-    "D" : "",
-    "E" : "",
-    "F" : "^",
-    "G" : "^",
-    "A" : "",
-    "B" : ""
-};
-var b_major_map = {
-    "C" : "^",
-    "D" : "^",
-    "E" : "",
-    "F" : "^",
-    "G" : "^",
-    "A" : "^",
-    "B" : ""
-};
-
-var majorKeyMap = {
-    "C" : c_major_map,
-    "D" : d_major_map,
-    "E" : e_major_map,
-    "F" : f_major_map,
-    "G" : g_major_map,
-    "A" : a_major_map,
-    "B" : b_major_map
-};
-var minorKeyMap = {
-    // In terms of their relative major keys
-    "C" : null,
-    "D" : f_major_map,
-    "E" : g_major_map,
-    "F" : null,
-    "G" : null,
-    "A" : c_major_map,
-    "B" : d_major_map
-};
-var dorianKeyMap = {
-    // In terms of their relative major keys
-    "C" : null,
-    "D" : c_major_map,
-    "E" : null,
-    "F" : null,
-    "G" : f_major_map,
-    "A" : null,
-    "B" : null
-};
-
 // Globals
 var abcOutput = "";
-var keySignatureMap = null;
+var keySignature = null;
 var bestCost;
 var alreadyVisited = null;
 var startTime = new Date().getTime();
@@ -172,9 +77,9 @@ function finger(abcInput) {
     log("Got input:"+abcInput);
 
     // Find the key signature in the input
-    keySignatureMap = findKeySignature(abcInput);
+    keySignature = findKeySignature(abcInput);
 
-    if (keySignatureMap == null) {
+    if (keySignature == null) {
         return ("ERROR: Unknown or unsupported key signature");
     }
 
@@ -218,40 +123,128 @@ function finger(abcInput) {
  // abcInput: ABC input string
  // returns: key signature map to use, or null on error.
 function findKeySignature(abcInput) {
-    
-    keySignatureMap = null;
 
-    var keyMatch = abcInput.match(/[kK]: *([a-gA-G]) *(.*?)$/m);
-    if (keyMatch == null || keyMatch.length < 2) {
+    var myMap = null;
+
+    var keyMatch = abcInput.match(/[kK]: *([A-G])([b#])? *(.*?)$/m);
+    if (keyMatch == null || keyMatch.length < 3) {
         return null;
     }
-    var keySignatureBase=keyMatch[1];
-    var keyExtra=keyMatch[2]==null ? "" : keyMatch[2].toLowerCase();
+
+    var keySignatureBase;
+    var keyExtra;
+
+    if (keyMatch[2] == undefined) {
+        keySignatureBase = keyMatch[1];
+    }
+    else {
+        keySignatureBase = keyMatch[1] + keyMatch[2];
+    }
+    keyExtra = keyMatch[3].toLowerCase();
+
+
     log("Got base key of '" + keySignatureBase + "' and extra of '" + keyExtra + "'");
 
-    // Determine major/minor/dorian
+    // Determine musical mode
     if (keyExtra == "" ||
-        keyExtra.search("maj") != -1 ) {
-        // Major
-        log("Determined a major key in " + keySignatureBase);
-        return majorKeyMap[keySignatureBase];
-    } else if (keyExtra == "m" ||
-               keyExtra.search("min") != -1) {
-        // Minor
-        log("Determined a minor key in " + keySignatureBase);
-        return minorKeyMap[keySignatureBase];
+        keyExtra.search("maj") != -1 ||
+        keyExtra.search("ion") != -1) {
+        log("Mode: Ionian (major)");
+        myMap = keySignatureMap(keySignatureBase, 0);
+    } else if (keyExtra.search("mix") != -1) {
+        log("Mode: Mixolydian");
+        myMap = keySignatureMap(keySignatureBase, 1);
     } else if (keyExtra.search("dor") != -1) {
-        // Dorian
-        log("Determined a dorian key in " + keySignatureBase);
-        return dorianKeyMap[keySignatureBase];
+        log("Mode: Dorian");
+        myMap = keySignatureMap(keySignatureBase, 2);
+    } else if ((keyExtra.search("m") != -1 && keyExtra.search("mix") == -1) ||
+               keyExtra.search("min") != -1 ||
+               keyExtra.search("aeo") != -1) {
+        log("Mode: Aeolian (minor)");
+        myMap = keySignatureMap(keySignatureBase, 3);
+    } else if (keyExtra.search("phr") != -1) {
+        log("Mode: Phrygian");
+        myMap = keySignatureMap(keySignatureBase, 4);
+    } else if (keyExtra.search("loc") != -1) {
+        log("Mode: Locrian");
+        myMap = keySignatureMap(keySignatureBase, 5);
+    } else if (keyExtra.search("lyd") != -1) {
+        log("Mode: Lydian");
+        myMap = keySignatureMap(keySignatureBase, -1);
+    } else if (keyExtra.search("exp") != -1) {
+        log("(Accidentals to be explicitly specified)");
+        myMap = keySignatureMap("C", 0);
     } else {
         // Unknown
-        log("Failed to determine major/minor key signature");
-        return null;
+        log("Failed to determine key signature mode");
+        myMap = null;
     }
+
+    if (myMap == null) {
+        return myMap;
+    }
+
+    //Handle explicit accidentals
+    var explicitFlats = keyExtra.match(/_./g);
+    var explicitSharps = keyExtra.match(/\^./g);
+
+    for (note in explicitFlats) {
+        myMap.flats += explicitFlats[note][1].toUpperCase();
+    }
+
+    for (note in explicitSharps) {
+        myMap.sharps += explicitSharps[note][1].toUpperCase();
+    }
+
+    return myMap;
 
 }
 
+// Calculates a key signature map given a tonic and a mode
+function keySignatureMap(tonic, modeFlatness) {
+    var circleOfFifths = "FCGDAEB"
+
+    var signature = {
+        sharps: "",
+        flats: ""
+    }
+
+    var baseSharpness = circleOfFifths.indexOf(tonic[0]) - 1;
+
+    if (baseSharpness == -2) {
+        log("Bad tonic: " + tonic);
+        return null;
+    }
+
+    if (tonic.slice(1) == "b") {
+        baseSharpness -= 7;
+    } else if (tonic.slice(1) == "#") {
+        baseSharpness += 7;
+    }
+
+    var totalSharpness = baseSharpness - modeFlatness;
+
+    if (totalSharpness > 7) {
+        log("Too many sharps: " + totalSharpness);
+        return null;
+    }
+    else if (totalSharpness < -7) {
+        log("Too many flats: " + (totalSharpness * -1));
+        return null;
+    }
+    else if (totalSharpness > 0) {
+        signature.sharps = circleOfFifths.slice(0, totalSharpness);
+    }
+    else if (totalSharpness < 0) {
+        signature.flats = circleOfFifths.slice(totalSharpness);
+    }
+
+    signature.accidentalSharps = "";
+    signature.accidentalFlats = "";
+    signature.accidentalNaturals = "";
+
+    return signature;
+}
 
 // Merges an array of Button objects with an array of Notes
 // with the original string input.
@@ -319,8 +312,6 @@ function chooseFingerings(notes, noteToButtonMap) {
     alreadyVisited = {};
 
    return chooseFingeringsRecursive(notes, 0, noteToButtonMap);
-
-
 }
 
 function chooseFingeringsRecursive(notes, noteIndex, noteToButtonMap) {
@@ -348,9 +339,15 @@ function chooseFingeringsRecursive(notes, noteIndex, noteToButtonMap) {
     // Consider all possible buttons for this note
     var buttons = noteToButtonMap[normalizedValue];
     if (buttons == null || buttons.length < 1) {
-        abcOutput = "ERROR:Failed to find button for note '"+normalizedValue+"'";
         log("Failed to find button for note " + normalizedValue);
-        return null;
+        log("Attempting respell...");
+        var otherName = respell(normalizedValue);
+        buttons = noteToButtonMap[otherName];
+        if (buttons == null || buttons.length < 1) {
+            log("Respelling as " + otherName + " failed to find a button.");
+            abcOutput = "ERROR:Failed to find button for note '" + normalizedValue + "'";
+            return null;
+        }
     }
     
     var bestButtonChoice = {cost:10000000, buttons:[]};
@@ -440,37 +437,60 @@ function getAbcNotes(input) {
     log("sanitized input:"+sanitizedInput);
     
     // Find all the notes
-    var regex = /([=^_]?[a-gA-G][',]?)/g;
+    var regex = /([=^_]?[a-gA-G][',]?|\|)/g;
     var notes = [];
     var m;
     while (m = regex.exec(sanitizedInput)) {
         var unNormalizedValue = m[1];
-        var normalizedValue = normalize(unNormalizedValue);
-        notes.push(new Note((m.index), unNormalizedValue, normalizedValue));
+        if (unNormalizedValue == "|") {
+            keySignature.accidentalFlats = "";
+            keySignature.accidentalSharps = "";
+            keySignature.accidentalNaturals = "";
+        }
+        else {
+            var normalizedValue = normalize(unNormalizedValue);
+            notes.push(new Note((m.index), unNormalizedValue, normalizedValue));
+        }
     }
 
     return notes;
 }
 
+function respell(note) {
+    var ret = note;
+    // enharmonic respellings
+    var respellings = {
+        //    "_A": "^G",
+        "^A": "_B",
+        //    "_B": "^A",
+        //    "B": "_C",
+        "^B": "C",
+        "_C": "B",
+        //    "C": "^B",
+        //    "^C": "_D",
+        "_D": "^C",
+        "^D": "_E",
+        //    "_E": "^D",
+        //    "E": "_F",
+        "^E": "F",
+        "_F": "E",
+        //    "F": "^E",
+        //    "^F": "_G",
+        "_G": "^F",
+        "^G": "_A"
+    }
+    for (x in respellings) {
+        ret = ret.replace(x, respellings[x]);
+        ret = ret.replace(x.toLowerCase(), respellings[x].toLowerCase());
+    }
+    return ret;
+}
+
 // Normalizes the given note string, given the key signature.
 // This means making sharps or flats explicit, and removing
 // extraneous natural signs.
-// FIXME: this doesn't preserve accidentals within a measure!
 // Returns the normalized note string.
 function normalize(value) {
-
-    // Does it have a natural?
-    if (value.substr(0,1) == "=") {
-        // Yes. Remove it.
-        return value.substr(1);
-    }
-
-    // Does it already have an accidental?
-    if (value.substr(0,1) == "_" ||
-        value.substr(0,1) == "^") {
-        // Leave it intact
-        return value;
-    }
 
     // Find note base name
     var i = value.search(/[A-G]/i);
@@ -480,12 +500,46 @@ function normalize(value) {
     }
     var baseName = value.substr(i,1).toUpperCase();
     
-    // Transform to key signature
-    var accidental = keySignatureMap[baseName];
-    
-    // Add any accidentals
-    return accidental + value;
+    // Does it have a natural?
+    if (value.substr(0, 1) == "=") {
+        keySignature.accidentalFlats = keySignature.accidentalFlats.replace(baseName, "");
+        keySignature.accidentalSharps = keySignature.accidentalSharps.replace(baseName, "");
+        keySignature.accidentalNaturals += baseName;
+        return value.substr(1);
+    }
 
+    // Does it already have an accidental?
+    if (value.substr(0, 1) == "_") {
+        keySignature.accidentalFlats += baseName;
+        keySignature.accidentalSharps = keySignature.accidentalSharps.replace(baseName, "");
+        keySignature.accidentalNaturals = keySignature.accidentalNaturals.replace(baseName, "");
+        return value;
+    }
+
+    if (value.substr(0, 1) == "^") {
+        keySignature.accidentalFlats = keySignature.accidentalFlats.replace(baseName, "");
+        keySignature.accidentalNaturals = keySignature.accidentalNaturals.replace(baseName, "");
+        keySignature.accidentalSharps += baseName;
+        return value;
+    }
+
+    // Transform to key signature
+
+    if (keySignature.accidentalNaturals.search(baseName) != -1) {
+        return value;
+    }
+
+    if (keySignature.sharps.search(baseName) != -1 ||
+        keySignature.accidentalSharps.search(baseName) != -1) {
+        return "^" + value;
+    }
+
+    if (keySignature.flats.search(baseName) != -1 ||
+        keySignature.accidentalFlats.search(baseName)) {
+        return "_" + value;
+    }
+
+    return value;
 }
 
 // Sorts the button entries in the given note->button map, with
@@ -503,6 +557,7 @@ function sortButtonMap(noteToButtonMap) {
 
 // Given a button->note map, generates
 // the corresponding note->button map.
+// Keys of this map are filtered through "respell".
 // The values of this map have {button, cost, finger}.
 // Returns the note->button map
 function generateNoteToButtonMap(buttonMap) {
@@ -516,7 +571,8 @@ function generateNoteToButtonMap(buttonMap) {
             next;
         }
         notes.forEach(
-            function(v) {
+            function (v) {
+                v = respell(v);
                 if (noteMap[v] == null ) { 
                     // Create a new button list for this note.
                     noteMap[v] = [{button: b, cost: cost, finger: finger}];
