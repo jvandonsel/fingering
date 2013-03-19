@@ -342,6 +342,7 @@ function chooseFingeringsRecursive(notes, noteIndex, noteToButtonMap) {
         log("Failed to find button for note " + normalizedValue);
         log("Attempting respell...");
         var otherName = respell(normalizedValue);
+        log("Respelled as " + otherName);
         buttons = noteToButtonMap[otherName];
         if (buttons == null || buttons.length < 1) {
             log("Respelling as " + otherName + " failed to find a button.");
@@ -449,6 +450,7 @@ function getAbcNotes(input) {
         }
         else {
             var normalizedValue = normalize(unNormalizedValue);
+            log("UnNormalized="+unNormalizedValue+" normalized="+normalizedValue);
             notes.push(new Note((m.index), unNormalizedValue, normalizedValue));
         }
     }
@@ -479,7 +481,7 @@ function respell(note) {
         "_G": "^F",
         "^G": "_A"
     }
-    for (x in respellings) {
+    for (var x in respellings) {
         ret = ret.replace(x, respellings[x]);
         ret = ret.replace(x.toLowerCase(), respellings[x].toLowerCase());
     }
@@ -535,7 +537,7 @@ function normalize(value) {
     }
 
     if (keySignature.flats.search(baseName) != -1 ||
-        keySignature.accidentalFlats.search(baseName)) {
+        keySignature.accidentalFlats.search(baseName) != -1) {
         return "_" + value;
     }
 
