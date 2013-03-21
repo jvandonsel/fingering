@@ -40,15 +40,15 @@ var jeffriesMap = {
 "R1a"  :  { notes: ["^d" , "^c"],  cost: 10, finger: "r1" },
 "R2a"  :  { notes: ["^c" , "^d"],    cost: 10, finger: "r2" },
 "R3a"  :  { notes: ["^g", "g"],   cost: 10, finger: "r3" },
-"R4a"  :  { notes: ["^c'", "_b'"], cost: 10, finger: "r4" },
-"R5a"  :  { notes: ["a''", "d'"],  cost: 10, finger: "r4" },
+"R4a"  :  { notes: ["^c'", "_b"], cost: 10, finger: "r4" },
+"R5a"  :  { notes: ["a", "d'"],  cost: 10, finger: "r4" },
 
 // Middle row, RH
 "R1"  :  { notes: ["c"  , "B"],  cost: 1, finger: "r1" },
 "R2"  :  { notes: ["e"  , "d"],  cost: 1, finger: "r2" },
 "R3"  :  { notes: ["g"  , "f"],  cost: 2, finger: "r3" },
 "R4"  :  { notes: ["c'" , "a"],  cost: 2, finger: "r4" },
-"R5" :   { notes: ["e'" , "b'"], cost: 1, finger: "r4" },
+"R5" :   { notes: ["e'" , "b"], cost: 1, finger: "r4" },
 
 // Bottom row, RH
 "R6"  :  { notes: ["g" , "^f"],  cost: 1, finger: "r1" },
