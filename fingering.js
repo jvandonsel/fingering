@@ -6,9 +6,18 @@
 // for the Anglo Concertina.
 
 // Be safe!
-//"use strict";
+"use strict";
 
-var verbose = false;
+var verbose = true;
+
+// Button constructor
+var Button = function(name, notes, cost, finger) {
+    this.name = name;
+    this.notes = notes;
+    this.cost = cost;
+    this.finger = finger;
+}
+
 
 // Button maps
 // Lower cost means button is preferred
@@ -16,46 +25,46 @@ var verbose = false;
 var jeffriesMap = {
 
 // Top row, LH
-"L1a"  : { notes: ["E,", "F,"],  cost: 10, finger: "l4" },
-"L2a"  : { notes: ["A,", "_B,"], cost: 10, finger: "l4" },
-"L3a"  : { notes: ["^C", "_E"], cost: 10, finger: "l3" },
-"L4a"  : { notes: ["A", "G"],    cost: 10, finger: "l2" },
-"L5a"  : { notes: ["^G", "_B"],  cost: 10, finger: "l1" },
+"L1a"  : new Button("L1a", ["E,", "F,"], 10, "l4" ),
+"L2a"  : new Button("L2a", ["A,", "_B,"], 10, "l4" ),
+"L3a"  : new Button("L3a", ["^C", "_E"], 10, "l3" ),
+"L4a"  : new Button("L4a", ["A", "G"],    10, "l2" ),
+"L5a"  : new Button("L5a", ["^G", "_B"],  10, "l1" ),
 
 // Middle row, LH
-"L1"  :  { notes: ["C,", "G,"], cost: 1, finger: "l4" },
-"L2"  :  { notes: ["G,", "B,"], cost: 1, finger: "l4" },
-"L3"  :  { notes: ["C" , "D"],  cost: 1, finger: "l3" },
-"L4"  :  { notes: ["E" , "F"],  cost: 1, finger: "l2" },
-"L5"  :  { notes: ["G" , "A"],  cost: 1, finger: "l1" },
+"L1"  :  new Button("L1", ["C,", "G,"], 1, "l4" ),
+"L2"  :  new Button("L2", ["G,", "B,"], 1, "l4" ),
+"L3"  :  new Button("L3", ["C" , "D"],  1, "l3" ),
+"L4"  :  new Button("L4", ["E" , "F"],  1, "l2" ),
+"L5"  :  new Button("L5", ["G" , "A"],  1, "l1" ),
 
 // Bottom row, LH
-"L6"  :  { notes: ["B," , "A,"], cost: 1, finger: "l4" },
-"L7"  :  { notes: ["D"  , "^F"], cost: 2,  finger: "l4" },
-"L8"  :  { notes: ["G"  , "A"],  cost: 2,  finger: "l3" },
-"L9"  :  { notes: ["B"  , "c"],  cost: 2,  finger: "l2" },
-"L10" :  { notes: ["d"  , "e"],  cost: 2,  finger: "l1" },
+"L6"  :  new Button("L6", ["B," , "A,"], 1, "l4" ),
+"L7"  :  new Button("L7", ["D"  , "^F"], 2,  "l4" ),
+"L8"  :  new Button("L8", ["G"  , "A"],  2,  "l3" ),
+"L9"  :  new Button("L9", ["B"  , "c"],  2,  "l2" ),
+"L10" :  new Button("L10", ["d"  , "e"],  2,  "l1" ),
 
 // Top row, RH
-"R1a"  :  { notes: ["^d" , "^c"],  cost: 10, finger: "r1" },
-"R2a"  :  { notes: ["^c" , "^d"],    cost: 10, finger: "r2" },
-"R3a"  :  { notes: ["^g", "g"],   cost: 10, finger: "r3" },
-"R4a"  :  { notes: ["^c'", "_b"], cost: 10, finger: "r4" },
-"R5a"  :  { notes: ["a", "d'"],  cost: 10, finger: "r4" },
+"R1a"  :  new Button("R1a", ["^d" , "^c"],  10, "r1" ),
+"R2a"  :  new Button("R2a", ["^c" , "^d"],    10, "r2" ),
+"R3a"  :  new Button("R3a", ["^g", "g"],   10, "r3" ),
+"R4a"  :  new Button("R4a", ["^c'", "_b"], 10, "r4" ),
+"R5a"  :  new Button("R5a", ["a", "d'"],  10, "r4" ),
 
 // Middle row, RH
-"R1"  :  { notes: ["c"  , "B"],  cost: 1, finger: "r1" },
-"R2"  :  { notes: ["e"  , "d"],  cost: 1, finger: "r2" },
-"R3"  :  { notes: ["g"  , "f"],  cost: 2, finger: "r3" },
-"R4"  :  { notes: ["c'" , "a"],  cost: 2, finger: "r4" },
-"R5" :   { notes: ["e'" , "b"], cost: 1, finger: "r4" },
+"R1"  :  new Button("R1", ["c"  , "B"], 1, "r1" ),
+"R2"  :  new Button("R2", ["e"  , "d"],  1, "r2" ),
+"R3"  :  new Button("R3",  ["g"  , "f"],  2, "r3" ),
+"R4"  :  new Button("R4", ["c'" , "a"],  2, "r4" ),
+"R5" :   new Button("R5", ["e'" , "b"], 2, "r4" ),
 
 // Bottom row, RH
-"R6"  :  { notes: ["g" , "^f"],  cost: 1, finger: "r1" },
-"R7"  :  { notes: ["b"  , "a"],  cost: 1, finger: "r2" },
-"R8"  :  { notes: ["d'" , "c'"],  cost: 1, finger: "r3" },
-"R9"  :  { notes: ["g'", "e'"],  cost: 1, finger: "r4" },
-"R10" :  { notes: ["b'", "^f'"],  cost: 1, finger: "r4" },
+"R6"  :  new Button("R6", ["g" , "^f"],  1, "r1" ),
+"R7"  :  new Button("R7", ["b"  , "a"],  1, "r2" ),
+"R8"  :  new Button("R8", ["d'" , "c'"],  1, "r3" ),
+"R9"  :  new Button("R9", ["g'", "e'"],  1, "r4" ),
+"R10" :  new Button("R10", ["b'", "^f'"],  1, "r4" )
 };
 
 var buttonToNoteMap = jeffriesMap;
@@ -94,17 +103,30 @@ function finger(abcInput) {
     // This speeds up tree pruning later
     sortButtonMap(noteToButtonMap);
 
-     var buttonChoices = chooseFingerings(notes, noteToButtonMap);
-     if (buttonChoices == null) {
+    // Generate a state tree
+    var stateTree = generateStateTree(notes, noteToButtonMap);
+
+     var path = chooseFingerings(stateTree);
+     if (path == null) {
          log("No fingerings generated!");
          return abcOutput;
      }
 
      // Merge the chosen fingerings with the ABC notation
-     abcOutput = mergeFingerings(abcInput, buttonChoices.buttons, notes);
+     abcOutput = mergeFingerings(abcInput, path, notes);
 
      return abcOutput;
 
+ }
+
+
+// Path constructor.
+//
+// buttons: list of States
+// cost: integer cost of total set of buttons, lower is better
+var Path = function(states, cost) {
+     this.states = states;
+     this.cost = cost; 
  }
 
  // Note constructor
@@ -118,6 +140,14 @@ function finger(abcInput) {
      // Normalized means it's adjusted by the key signature and extra decorations are removed.
      this.normalizedValue = normalizedValue; 
  }
+
+// State constructor
+var State = function(note, button) {
+    this.note = note;
+    this.button = button;
+    this.nextStates = [];
+}
+
 
  // Determines the key signature
  // abcInput: ABC input string
@@ -249,18 +279,22 @@ function keySignatureMap(tonic, modeFlatness) {
 // Merges an array of Button objects with an array of Notes
 // with the original string input.
 // Returns a merged string.
-function mergeFingerings(input, buttons, notes) {
-    if (buttons.length != notes.length) {
+function mergeFingerings(input, path, notes) {
+
+    // Drop the first state of the path - it's a dummy root state
+    path.states.shift();
+
+    if (path.states.length != notes.length) {
         return "ERROR: Internal error. Length mismatch";
     }
 
     var result = input;
     var insertedTotal = 0;
-    for (var i = 0; i < buttons.length; ++i) {
+    for (var i = 0; i < path.states.length; ++i) {
 
         var index = notes[i].index + insertedTotal;
 
-        var fingering = buttons[i].button;
+        var fingering = path.states[i].button.name;
 
         // Add double quotes to fingering
         fingering = "\"" + fingering + "\"";
@@ -276,14 +310,7 @@ function mergeFingerings(input, buttons, notes) {
     return result;
 }
 
-// Button Choice constructor.
-//
-// buttons: list of buttons, each one a string like "L1"
-// cost: integer cost of total set of buttons, lower is better
-var ButtonChoices = function(buttons, cost) {
-     this.buttons = buttons; 
-     this.cost = cost; 
- }
+
 
 // Determines if these two buttons would be a hop if 
 // played back-to-back
@@ -291,13 +318,74 @@ function isHop(button1, button2) {
     
     // Check for finger hops (i.e. same finger, different button)
     return (button1.finger == button2.finger && 
-            button1.button != button2.button) ;
+            button1.name != button2.name) ;
 }
+
+
+// Generate a state tree from the notes.
+// Each note will generate several possible states, each representing
+// a possible button.  All states corresponding to a note will be
+// cross-connected to all states in the next note.
+// Returns an initial (dummy) State, with next states corresponding to
+// the first note of the tune.
+function generateStateTree(notes, noteToButtonMap) {
+
+    var firstNoteStates = null;
+    var lastNoteStates = null;
+
+    for (var i = 0; i < notes.length; ++i) {
+        var note = notes[i];
+
+        var normalizedValue = note.normalizedValue;
+        log(">>>Generating states for note " + normalizedValue);
+
+        var buttons = noteToButtonMap[normalizedValue];
+
+        if (buttons == null || buttons.length < 1) {
+            log("Failed to find button for note " + normalizedValue);
+            log("Attempting respell...");
+            var otherName = respell(normalizedValue);
+            log("Respelled as " + otherName);
+            buttons = noteToButtonMap[otherName];
+            if (buttons == null || buttons.length < 1) {
+                log("Respelling as " + otherName + " failed to find a button.");
+                abcOutput = "ERROR:Failed to find button for note '" + normalizedValue + "'";
+                return null;
+            }
+        }
+        
+        var states = [];
+        // Create a state per button
+        buttons.forEach(function(button) {
+
+            states.push(new State(note, button));
+
+        });
+
+        // Remember the start of the tree - that's what we will return
+        if (firstNoteStates == null) {
+            firstNoteStates = states;
+        }
+        // Cross-connect the last set of states to these new states 
+        if (lastNoteStates != null) {
+            lastNoteStates.forEach(function(lastState) {
+                lastState.nextStates = states;
+            });
+        }
+        lastNoteStates = states;
+    }
+
+    // Create a dummy state as our tree root
+    var rootState = new State(null, new Button("root", [],  0, "none" ));
+    rootState.nextStates = firstNoteStates;
+    return rootState;
+
+} // end generateStateTree
 
 
 
 // Chooses fingerings.
-// returns: a ButtonChoices object with the best button choices
+// returns: a Path object with the best button choices
 // 
 // This is the guts of this program.  Uses various
 // heuristics to choose semi-optimal fingerings
@@ -305,105 +393,90 @@ function isHop(button1, button2) {
 //
 // Recursively chooses the best fingering from
 // all possible fingerings.
-function chooseFingerings(notes, noteToButtonMap) {
+function chooseFingerings(stateTree) {
  
     bestCost = 100000000;
 
     alreadyVisited = {};
 
-   return chooseFingeringsRecursive(notes, 0, noteToButtonMap);
+   return chooseFingeringsRecursive(stateTree)
 }
 
-function chooseFingeringsRecursive(notes, noteIndex, noteToButtonMap) {
+// Choose best fingerings for current state.
+// Returns a Path
+function chooseFingeringsRecursive(state) {
 
-    if (notes.length == noteIndex ) {
+    if (state.nextStates.length == 0) {
         // Done with notes. Bubble back up.
         log("Popping up the stack");
-        return  new ButtonChoices([], 0);
+        return  new Path([state], state.button.cost);
     }
 
-
-
-    var note = notes[noteIndex]
-    var unNormalizedValue = note.unNormalizedValue;
-    var normalizedValue = note.normalizedValue;
-
-    log("["+getTime()+"] Choosing: note=" + normalizedValue + "[" + noteIndex + "]");
-
-    if (alreadyVisited[note]) {
-        log("Already visited note[" + note.normalizedValue + "," + noteIndex + "]");
-        return alreadyVisited[note];
+    var note = state.note;
+    var unNormalizedValue = null;
+    var normalizedValue = null;
+    if (note != null) {
+        unNormalizedValue = note.unNormalizedValue;
+        normalizedValue = note.normalizedValue;
     }
 
+    log("["+getTime()+"] Choosing: note=" + normalizedValue);
 
-    // Consider all possible buttons for this note
-    var buttons = noteToButtonMap[normalizedValue];
-    if (buttons == null || buttons.length < 1) {
-        log("Failed to find button for note " + normalizedValue);
-        log("Attempting respell...");
-        var otherName = respell(normalizedValue);
-        log("Respelled as " + otherName);
-        buttons = noteToButtonMap[otherName];
-        if (buttons == null || buttons.length < 1) {
-            log("Respelling as " + otherName + " failed to find a button.");
-            abcOutput = "ERROR:Failed to find button for note '" + normalizedValue + "'";
-            return null;
-        }
+    if (alreadyVisited[state]) {
+        log("Already visited state note=" + state.note.normalizedValue + " button=" + state.button.name);
+        return alreadyVisited[state];
     }
     
-    var bestButtonChoice = {cost:10000000, buttons:[]};
+    var bestPath = new Path([], 10000000);
 
-    // Recurse! Find the fingering for the rest of the tune.
-    var choice = chooseFingeringsRecursive(notes, noteIndex+1, noteToButtonMap);
-    if (choice == null) {
-        log("Could not get fingerings");
-        return null;
-    }
+    // Consider all the possible next states
+    for (var i = 0; i < state.nextStates.length; ++i) {
 
-
-    for (var i = 0; i < buttons.length; ++i) {
-
-        var b = buttons[i];
+        var nextState = state.nextStates[i];
         
-        log("Trying button " + b.button + " ("+ (i+1) + " of " + buttons.length + ") for note " + note.normalizedValue + "[" + noteIndex + "]");
+        log("Trying button " + state.button.finger + " for note " + normalizedValue);
 
-        
-        var newCost = b.cost;
+        // Recurse! Find the fingering for the rest of the tune.
+        var path = chooseFingeringsRecursive(nextState);
+        if (path == null) {
+            log("Could not get fingerings");
+            return null;
+        }
+               
+        var myCost = state.button.cost;
         var HOP_COST = 100;
 
-        if (choice.buttons.length != 0) {
-            var nextFinger = choice.buttons[0].finger;            
-            var nextButton = choice.buttons[0].button;
+        if (path.states.length != 0) {
+            var nextButton = path.states[0].button;
+            var nextFinger = path.states[0].button.finger;            
 
             // Check for finger hops (i.e. same finger, different button)
-            if (isHop(b, choice.buttons[0])) {
+            if (isHop(state.button, nextButton)) {
                 // Penalize finger hops (i.e. same finger, different button)
-                log("Penalizing finger hop for note " + note.normalizedValue);
-                newCost += HOP_COST;
+                log("Penalizing finger hop for note " + normalizedValue);
+                myCost += HOP_COST;
             }
         }
 
 
-        log("choice had cost of " + choice.cost + " my cost=" + newCost);
-        if (choice.cost + newCost < bestButtonChoice.cost) {
+        log("path had cost of " + path.cost + " my cost=" + myCost);
+        if (path.cost + myCost < bestPath.cost) {
             // Best choice so far.
-            // Prepend this button to the list.
-            var newButtonList = choice.buttons.slice(0); // clone array
-            newButtonList.unshift(b);
-            bestButtonChoice = new ButtonChoices(newButtonList, choice.cost + newCost);
-            log("New best choice for note["+note.normalizedValue+"], cost="+bestButtonChoice.cost);
+            // Prepend this State to the list
+            var newStateList = path.states.slice(0); // clone array
+            newStateList.unshift(state);
+            bestPath = new Path(newStateList, path.cost + myCost);
+            log("New best path for note["+normalizedValue+"], cost="+bestPath.cost);
         }
 
-    }
+    } // end for nextState
 
     // Memoize
-    alreadyVisited[note] = bestButtonChoice;
-    log("Saving alreadyVisited["+note.normalizedValue+","+noteIndex+"] with cost " + bestButtonChoice.cost);
+    alreadyVisited[state] = bestPath;
 
-    return bestButtonChoice;
+    return bestPath;
 
-
-}
+} // end chooseFingeringsRecursive
 
 // Replaces parts of the given string with '*'
 // input: string to replace
@@ -419,6 +492,7 @@ function sanitizeString(input, start, len) {
     return input.substr(0, start) + s + input.substr(start+len);
 
 }
+
 
 // Returns an array of Notes from the ABC string input
 function getAbcNotes(input) {
@@ -577,10 +651,10 @@ function generateNoteToButtonMap(buttonMap) {
                 v = respell(v);
                 if (noteMap[v] == null ) { 
                     // Create a new button list for this note.
-                    noteMap[v] = [{button: b, cost: cost, finger: finger}];
+                    noteMap[v] = [{name: b, cost: cost, finger: finger}];
                 } else {
                     // Insert this button into an existing button list for this note.
-                    noteMap[v].push({button: b, cost: cost, finger: finger});
+                    noteMap[v].push({name: b, cost: cost, finger: finger});
                 }
             });
         
