@@ -6,9 +6,9 @@
 // for the Anglo Concertina.
 
 // Be safe!
-"use strict";
+//"use strict";
 
-var verbose = true;
+var verbose = false;
 
 // Button constructor
 var Button = function(name, notes, cost, finger) {
@@ -25,11 +25,11 @@ var Button = function(name, notes, cost, finger) {
 var jeffriesMap = {
 
 // Top row, LH
-"L1a"  : new Button("L1a", ["E,", "F,"], 10, "l4" ),
-"L2a"  : new Button("L2a", ["A,", "_B,"], 10, "l4" ),
-"L3a"  : new Button("L3a", ["^C", "_E"], 10, "l3" ),
-"L4a"  : new Button("L4a", ["A", "G"],    10, "l2" ),
-"L5a"  : new Button("L5a", ["^G", "_B"],  10, "l1" ),
+"L1a"  : new Button("L1a" , ["E,", "F,"],  10, "l4" ),
+"L2a"  : new Button("L2a" , ["A,", "_B,"], 10, "l4" ),
+"L3a"  : new Button("L3a" , ["^C", "_E"],  10, "l3" ),
+"L4a"  : new Button("L4a" , ["A", "G"],    10, "l2" ),
+"L5a"  : new Button("L5a" , ["^G", "_B"],  10, "l1" ),
 
 // Middle row, LH
 "L1"  :  new Button("L1", ["C,", "G,"], 1, "l4" ),
@@ -43,28 +43,28 @@ var jeffriesMap = {
 "L7"  :  new Button("L7", ["D"  , "^F"], 2,  "l4" ),
 "L8"  :  new Button("L8", ["G"  , "A"],  2,  "l3" ),
 "L9"  :  new Button("L9", ["B"  , "c"],  2,  "l2" ),
-"L10" :  new Button("L10", ["d"  , "e"],  2,  "l1" ),
+"L10" :  new Button("L10", ["d"  , "e"], 2,  "l1" ),
 
 // Top row, RH
-"R1a"  :  new Button("R1a", ["^d" , "^c"],  10, "r1" ),
-"R2a"  :  new Button("R2a", ["^c" , "^d"],    10, "r2" ),
+"R1a"  :  new Button("R1a", ["^d" , "^c"], 10, "r1" ),
+"R2a"  :  new Button("R2a", ["^c" , "^d"], 10, "r2" ),
 "R3a"  :  new Button("R3a", ["^g", "g"],   10, "r3" ),
 "R4a"  :  new Button("R4a", ["^c'", "_b"], 10, "r4" ),
-"R5a"  :  new Button("R5a", ["a", "d'"],  10, "r4" ),
+"R5a"  :  new Button("R5a", ["a", "d'"],   10, "r4" ),
 
 // Middle row, RH
-"R1"  :  new Button("R1", ["c"  , "B"], 1, "r1" ),
+"R1"  :  new Button("R1", ["c"  , "B"],  1, "r1" ),
 "R2"  :  new Button("R2", ["e"  , "d"],  1, "r2" ),
-"R3"  :  new Button("R3",  ["g"  , "f"],  2, "r3" ),
+"R3"  :  new Button("R3",  ["g"  , "f"], 2, "r3" ),
 "R4"  :  new Button("R4", ["c'" , "a"],  2, "r4" ),
-"R5" :   new Button("R5", ["e'" , "b"], 2, "r4" ),
+"R5" :   new Button("R5", ["e'" , "b"],  2, "r4" ),
 
 // Bottom row, RH
-"R6"  :  new Button("R6", ["g" , "^f"],  1, "r1" ),
-"R7"  :  new Button("R7", ["b"  , "a"],  1, "r2" ),
+"R6"  :  new Button("R6", ["g" , "^f"],   1, "r1" ),
+"R7"  :  new Button("R7", ["b"  , "a"],   1, "r2" ),
 "R8"  :  new Button("R8", ["d'" , "c'"],  1, "r3" ),
-"R9"  :  new Button("R9", ["g'", "e'"],  1, "r4" ),
-"R10" :  new Button("R10", ["b'", "^f'"],  1, "r4" )
+"R9"  :  new Button("R9", ["g'", "e'"],   1, "r4" ),
+"R10" :  new Button("R10", ["b'", "^f'"], 1, "r4" )
 };
 
 var buttonToNoteMap = jeffriesMap;
@@ -75,6 +75,7 @@ var keySignature = null;
 var bestCost;
 var alreadyVisited = null;
 var startTime = new Date().getTime();
+var stateCount = 0;
 
 function log(s) {
     if (verbose)
@@ -146,6 +147,18 @@ var State = function(note, button) {
     this.note = note;
     this.button = button;
     this.nextStates = [];
+    this.id = stateCount++;
+    this.toString = function() {
+        var s = "["+this.id+"] Note:";
+        if (this.note) {
+            s += this.note.normalizedValue;
+        } else {
+            s += "none";
+        }
+
+        s += " Button:"+this.button.name;
+        return s;
+    };
 }
 
 
@@ -337,8 +350,6 @@ function generateStateTree(notes, noteToButtonMap) {
         var note = notes[i];
 
         var normalizedValue = note.normalizedValue;
-        log(">>>Generating states for note " + normalizedValue);
-
         var buttons = noteToButtonMap[normalizedValue];
 
         if (buttons == null || buttons.length < 1) {
@@ -408,7 +419,7 @@ function chooseFingeringsRecursive(state) {
 
     if (state.nextStates.length == 0) {
         // Done with notes. Bubble back up.
-        log("Popping up the stack");
+        log("Last state, note=" + state.note.normalizedValue + " button="+ state.button.name+ ". Popping up the stack");
         return  new Path([state], state.button.cost);
     }
 
@@ -420,7 +431,7 @@ function chooseFingeringsRecursive(state) {
         normalizedValue = note.normalizedValue;
     }
 
-    log("["+getTime()+"] Choosing: note=" + normalizedValue);
+    log("["+getTime()+"] Choosing: current note=" + normalizedValue + " button=" + state.button.name);
 
     if (alreadyVisited[state]) {
         log("Already visited state note=" + state.note.normalizedValue + " button=" + state.button.name);
@@ -434,7 +445,7 @@ function chooseFingeringsRecursive(state) {
 
         var nextState = state.nextStates[i];
         
-        log("Trying button " + state.button.finger + " for note " + normalizedValue);
+        log("Trying next [" + i + "/" + state.nextStates.length + "] note=" + nextState.note.normalizedValue + " button=" + nextState.button.name);
 
         // Recurse! Find the fingering for the rest of the tune.
         var path = chooseFingeringsRecursive(nextState);
@@ -473,6 +484,9 @@ function chooseFingeringsRecursive(state) {
 
     // Memoize
     alreadyVisited[state] = bestPath;
+
+    log("["+getTime()+"] Done choosing: current note=" + normalizedValue + " button=" + state.button.name + " best cost=" + bestPath.cost);
+
 
     return bestPath;
 
@@ -634,14 +648,12 @@ function sortButtonMap(noteToButtonMap) {
 // Given a button->note map, generates
 // the corresponding note->button map.
 // Keys of this map are filtered through "respell".
-// The values of this map have {button, cost, finger}.
+// The values of this map are buttons.
 // Returns the note->button map
-function generateNoteToButtonMap(buttonMap) {
+function generateNoteToButtonMap(buttonToNoteMap) {
     var noteMap = {};
-    for (var b in buttonMap) {
-        var notes  = buttonMap[b].notes;
-        var cost = buttonMap[b].cost;
-        var finger = buttonMap[b].finger;
+    for (var buttonName in buttonToNoteMap) {
+        var notes  = buttonToNoteMap[buttonName].notes;
         if (notes == null) {
             log("Failed to find entry for button " + b);
             next;
@@ -651,10 +663,10 @@ function generateNoteToButtonMap(buttonMap) {
                 v = respell(v);
                 if (noteMap[v] == null ) { 
                     // Create a new button list for this note.
-                    noteMap[v] = [{name: b, cost: cost, finger: finger}];
+                    noteMap[v] = [buttonToNoteMap[buttonName]];
                 } else {
                     // Insert this button into an existing button list for this note.
-                    noteMap[v].push({name: b, cost: cost, finger: finger});
+                    noteMap[v].push(buttonToNoteMap[buttonName]);
                 }
             });
         
