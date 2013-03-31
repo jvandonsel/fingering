@@ -73,7 +73,7 @@ var buttonToNoteMap = jeffriesMap;
 var abcOutput = "";
 var keySignature = null;
 var bestCost;
-var alreadyVisited = null;
+var bestPathFromState = null;
 var startTime = new Date().getTime();
 var stateCount = 0;
 
@@ -148,6 +148,9 @@ var State = function(note, button) {
     this.button = button;
     this.nextStates = [];
     this.id = stateCount++;
+
+    // This toString() function is needed to make sure this object is unique
+    // in a hash map. JS can only use strings as keys in hashes (objects).
     this.toString = function() {
         var s = "["+this.id+"] Note:";
         if (this.note) {
@@ -408,7 +411,7 @@ function chooseFingerings(stateTree) {
  
     bestCost = 100000000;
 
-    alreadyVisited = {};
+    bestPathFromState = {};
 
    return chooseFingeringsRecursive(stateTree)
 }
@@ -433,9 +436,9 @@ function chooseFingeringsRecursive(state) {
 
     log("["+getTime()+"] Choosing: current note=" + normalizedValue + " button=" + state.button.name);
 
-    if (alreadyVisited[state]) {
+    if (bestPathFromState[state]) {
         log("Already visited state note=" + state.note.normalizedValue + " button=" + state.button.name);
-        return alreadyVisited[state];
+        return bestPathFromState[state];
     }
     
     var bestPath = new Path([], 10000000);
@@ -483,7 +486,7 @@ function chooseFingeringsRecursive(state) {
     } // end for nextState
 
     // Memoize
-    alreadyVisited[state] = bestPath;
+    bestPathFromState[state] = bestPath;
 
     log("["+getTime()+"] Done choosing: current note=" + normalizedValue + " button=" + state.button.name + " best cost=" + bestPath.cost);
 
