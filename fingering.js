@@ -16,7 +16,7 @@ var Button = function(name, notes, cost, finger) {
     this.notes = notes;
     this.cost = cost;
     this.finger = finger;
-}
+};
 
 
 // Button maps
@@ -126,21 +126,21 @@ function finger(abcInput) {
 // buttons: list of States
 // cost: integer cost of total set of buttons, lower is better
 var Path = function(states, cost) {
-     this.states = states;
-     this.cost = cost; 
- }
+    this.states = states;
+    this.cost = cost;
+};
 
  // Note constructor
- var Note = function(index, unNormalizedValue, normalizedValue) {
-     this.index = index; // Index of this note in the original ABC input string
+var Note = function(index, unNormalizedValue, normalizedValue) {
+    this.index = index; // Index of this note in the original ABC input string
 
-     // These values an ABC string like "G" or "^A'"
-     // Unnormalized means it's the literal note string from the ABC source.
-     this.unNormalizedValue = unNormalizedValue; 
+    // These values an ABC string like "G" or "^A'"
+    // Unnormalized means it's the literal note string from the ABC source.
+    this.unNormalizedValue = unNormalizedValue;
 
-     // Normalized means it's adjusted by the key signature and extra decorations are removed.
-     this.normalizedValue = normalizedValue; 
- }
+    // Normalized means it's adjusted by the key signature and extra decorations are removed.
+    this.normalizedValue = normalizedValue;
+};
 
 // State constructor
 var State = function(note, button) {
@@ -152,17 +152,17 @@ var State = function(note, button) {
     // This toString() function is needed to make sure this object is unique
     // in a hash map. JS can only use strings as keys in hashes (objects).
     this.toString = function() {
-        var s = "["+this.id+"] Note:";
+        var s = "[" + this.id + "] Note:";
         if (this.note) {
             s += this.note.normalizedValue;
         } else {
             s += "none";
         }
 
-        s += " Button:"+this.button.name;
+        s += " Button:" + this.button.name;
         return s;
     };
-}
+};
 
 
  // Determines the key signature
@@ -248,12 +248,12 @@ function findKeySignature(abcInput) {
 
 // Calculates a key signature map given a tonic and a mode
 function keySignatureMap(tonic, modeFlatness) {
-    var circleOfFifths = "FCGDAEB"
+    var circleOfFifths = "FCGDAEB";
 
     var signature = {
         sharps: "",
         flats: ""
-    }
+    };
 
     var baseSharpness = circleOfFifths.indexOf(tonic[0]) - 1;
 
@@ -413,7 +413,7 @@ function chooseFingerings(stateTree) {
 
     bestPathFromState = {};
 
-   return chooseFingeringsRecursive(stateTree)
+    return chooseFingeringsRecursive(stateTree);
 }
 
 // Choose best fingerings for current state.
@@ -571,7 +571,7 @@ function respell(note) {
         //    "^F": "_G",
         "_G": "^F",
         "^G": "_A"
-    }
+    };
     for (var x in respellings) {
         ret = ret.replace(x, respellings[x]);
         ret = ret.replace(x.toLowerCase(), respellings[x].toLowerCase());
@@ -659,7 +659,7 @@ function generateNoteToButtonMap(buttonToNoteMap) {
         var notes  = buttonToNoteMap[buttonName].notes;
         if (notes == null) {
             log("Failed to find entry for button " + b);
-            next;
+            continue;
         }
         notes.forEach(
             function (v) {
