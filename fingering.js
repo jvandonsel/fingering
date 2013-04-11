@@ -22,7 +22,7 @@ var Button = function(name, notes, cost, finger) {
 // Button maps
 // Lower cost means button is preferred
 // Notes are [push, pull].
-var jeffriesMap = {
+var baseMap = {
 
 // Top row, LH
 "L1a"  : new Button("L1a" , ["E,", "F,"],  10, "l4" ),
@@ -45,13 +45,6 @@ var jeffriesMap = {
 "L9"  :  new Button("L9", ["B"  , "c"],  2,  "l2" ),
 "L10" :  new Button("L10", ["d"  , "e"], 2,  "l1" ),
 
-// Top row, RH
-"R1a"  :  new Button("R1a", ["^d" , "^c"], 10, "r1" ),
-"R2a"  :  new Button("R2a", ["^c" , "^d"], 10, "r2" ),
-"R3a"  :  new Button("R3a", ["^g", "g"],   10, "r3" ),
-"R4a"  :  new Button("R4a", ["^c'", "_b"], 10, "r4" ),
-"R5a"  :  new Button("R5a", ["a", "d'"],   10, "r4" ),
-
 // Middle row, RH
 "R1"  :  new Button("R1", ["c"  , "B"],  1, "r1" ),
 "R2"  :  new Button("R2", ["e"  , "d"],  1, "r2" ),
@@ -67,7 +60,41 @@ var jeffriesMap = {
 "R10" :  new Button("R10", ["b'", "^f'"], 1, "r4" )
 };
 
+var jeffriesMap = {
+    // Top row, RH
+    "R1a": new Button("R1a", ["^d", "^c"], 10, "r1"),
+    "R2a": new Button("R2a", ["^c", "^d"], 10, "r2"),
+    "R3a": new Button("R3a", ["^g", "g"], 10, "r3"),
+    "R4a": new Button("R4a", ["^c'", "_b"], 10, "r4"),
+    "R5a": new Button("R5a", ["a", "d'"], 10, "r4")
+};
+
+var wheatstoneMap = {   
+    // Top row, RH
+    "R1a": new Button("R1a", ["^c", "^d"], 10, "r1"),
+    "R2a": new Button("R2a", ["a", "g"], 10, "r2"),
+    "R3a": new Button("R3a", ["^g", "_b"], 10, "r3"),
+    "R4a": new Button("R4a", ["^c'", "_e'"], 10, "r4"),
+    "R5a": new Button("R5a", ["a", "f'"], 10, "r4"),   
+};
+
+for (var x in baseMap) {
+    jeffriesMap[x] = baseMap[x];
+    wheatstoneMap[x] = baseMap[x];
+}
+
 var buttonToNoteMap = jeffriesMap;
+
+var buttonMapIndex = {
+    "CGJeffries": jeffriesMap,
+    "CGWheatstone": wheatstoneMap
+};
+
+function setButtonToNoteMap() {
+    var index = document.getElementById('layout').selectedIndex;
+    var options = document.getElementById('layout').options;
+    buttonToNoteMap = buttonMapIndex[options[index].value];
+}
 
 // Globals
 var abcOutput = "";

@@ -60,7 +60,11 @@ K: Gmaj
                      document.getElementById('output').value=result;
 	             abc_editor = new ABCJS.Editor('output', { paper_id: 'paper0', warnings_id:'warnings' });">
       Generate Fingerings</button>
-    <br><br>
+        <select  id="layout" onchange="setButtonToNoteMap();">
+            <option value="CGJeffries">C/G Jeffries</option>
+            <option value="CGWheatstone">C/G Wheatstone</option>
+        </select>  
+      <br><br>
     ABC Output, with fingerings:<br>
     <textarea id="output"></textarea>
 
