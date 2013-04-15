@@ -12,12 +12,11 @@
   </head>
   <body>
     <h3>Anglo Concertina Fingering Generator</h3>
-    <p>Updated March 30, 2013
+    <p>Updated April 15, 2013
     <p>Notes:
       <ol>
-        <li>Only Jeffries C/G button layouts supported right now.
         <li>Fingering choices are still not optimal. For example, bellows usage is ignored. More work is needed here.
-        <li>Thanks to Ransom Smith for some additional accidental-handling code.
+        <li>Thanks to Ransom Smith for bugfixes and better button layouts
       </ol>
 
     <h3>Instructions</h3>
@@ -60,7 +59,11 @@ K: Gmaj
                      document.getElementById('output').value=result;
 	             abc_editor = new ABCJS.Editor('output', { paper_id: 'paper0', warnings_id:'warnings' });">
       Generate Fingerings</button>
-    <br><br>
+        <select  id="layout" onchange="setButtonToNoteMap();">
+            <option value="CGJeffries">C/G Jeffries</option>
+            <option value="CGWheatstone">C/G Wheatstone</option>
+        </select>  
+      <br><br>
     ABC Output, with fingerings:<br>
     <textarea id="output"></textarea>
 

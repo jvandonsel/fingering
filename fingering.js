@@ -16,13 +16,13 @@ var Button = function(name, notes, cost, finger) {
     this.notes = notes;
     this.cost = cost;
     this.finger = finger;
-}
+};
 
 
 // Button maps
 // Lower cost means button is preferred
 // Notes are [push, pull].
-var jeffriesMap = {
+var baseMap = {
 
 // Top row, LH
 "L1a"  : new Button("L1a" , ["E,", "F,"],  10, "l4" ),
@@ -45,13 +45,6 @@ var jeffriesMap = {
 "L9"  :  new Button("L9", ["B"  , "c"],  2,  "l2" ),
 "L10" :  new Button("L10", ["d"  , "e"], 2,  "l1" ),
 
-// Top row, RH
-"R1a"  :  new Button("R1a", ["^d" , "^c"], 10, "r1" ),
-"R2a"  :  new Button("R2a", ["^c" , "^d"], 10, "r2" ),
-"R3a"  :  new Button("R3a", ["^g", "g"],   10, "r3" ),
-"R4a"  :  new Button("R4a", ["^c'", "_b"], 10, "r4" ),
-"R5a"  :  new Button("R5a", ["a", "d'"],   10, "r4" ),
-
 // Middle row, RH
 "R1"  :  new Button("R1", ["c"  , "B"],  1, "r1" ),
 "R2"  :  new Button("R2", ["e"  , "d"],  1, "r2" ),
@@ -65,9 +58,44 @@ var jeffriesMap = {
 "R8"  :  new Button("R8", ["d'" , "c'"],  1, "r3" ),
 "R9"  :  new Button("R9", ["g'", "e'"],   1, "r4" ),
 "R10" :  new Button("R10", ["b'", "^f'"], 1, "r4" )
+
 };
 
+var jeffriesMap = {
+    // Top row, RH
+    "R1a": new Button("R1a", ["^d", "^c"], 10, "r1"),
+    "R2a": new Button("R2a", ["^c", "^d"], 10, "r2"),
+    "R3a": new Button("R3a", ["^g", "g"], 10, "r3"),
+    "R4a": new Button("R4a", ["^c'", "_b"], 10, "r4"),
+    "R5a": new Button("R5a", ["a", "d'"], 10, "r4")
+};
+
+var wheatstoneMap = {   
+    // Top row, RH
+    "R1a": new Button("R1a", ["^c", "^d"], 10, "r1"),
+    "R2a": new Button("R2a", ["a", "g"], 10, "r2"),
+    "R3a": new Button("R3a", ["^g", "_b"], 10, "r3"),
+    "R4a": new Button("R4a", ["^c'", "_e'"], 10, "r4"),
+    "R5a": new Button("R5a", ["a", "f'"], 10, "r4"),   
+};
+
+for (var x in baseMap) {
+    jeffriesMap[x] = baseMap[x];
+    wheatstoneMap[x] = baseMap[x];
+}
+
 var buttonToNoteMap = jeffriesMap;
+
+var buttonMapIndex = {
+    "CGJeffries": jeffriesMap,
+    "CGWheatstone": wheatstoneMap
+};
+
+function setButtonToNoteMap() {
+    var index = document.getElementById('layout').selectedIndex;
+    var options = document.getElementById('layout').options;
+    buttonToNoteMap = buttonMapIndex[options[index].value];
+}
 
 // Globals
 var abcOutput = "";
@@ -126,21 +154,44 @@ function finger(abcInput) {
 // buttons: list of States
 // cost: integer cost of total set of buttons, lower is better
 var Path = function(states, cost) {
-     this.states = states;
-     this.cost = cost; 
- }
+    this.states = states;
+    this.cost = cost;
+};
 
- // Note constructor
- var Note = function(index, unNormalizedValue, normalizedValue) {
-     this.index = index; // Index of this note in the original ABC input string
+// Note constructor
+var Note = function(index, unNormalizedValue, normalizedValue) {
+    this.index = index; // Index of this note in the original ABC input string
 
-     // These values an ABC string like "G" or "^A'"
-     // Unnormalized means it's the literal note string from the ABC source.
-     this.unNormalizedValue = unNormalizedValue; 
+    // These values an ABC string like "G" or "^A'"
+    // Unnormalized means it's the literal note string from the ABC source.
+    this.unNormalizedValue = unNormalizedValue;
 
-     // Normalized means it's adjusted by the key signature and extra decorations are removed.
-     this.normalizedValue = normalizedValue; 
- }
+    // Normalized means it's adjusted by the key signature and extra decorations are removed.
+    this.normalizedValue = normalizedValue;
+};
+
+// State constructor
+var State = function(note, button) {
+    this.note = note;
+    this.button = button;
+    this.nextStates = [];
+    this.id = stateCount++;
+
+    // This toString() function is needed to make sure this object is unique
+    // in a hash map. JS can only use strings as keys in hashes (objects).
+    this.toString = function() {
+        var s = "[" + this.id + "] Note:";
+        if (this.note) {
+            s += this.note.normalizedValue;
+        } else {
+            s += "none";
+        }
+
+        s += " Button:" + this.button.name;
+        return s;
+    };
+};
+
 
 // State constructor
 var State = function(note, button) {
@@ -248,12 +299,12 @@ function findKeySignature(abcInput) {
 
 // Calculates a key signature map given a tonic and a mode
 function keySignatureMap(tonic, modeFlatness) {
-    var circleOfFifths = "FCGDAEB"
+    var circleOfFifths = "FCGDAEB";
 
     var signature = {
         sharps: "",
         flats: ""
-    }
+    };
 
     var baseSharpness = circleOfFifths.indexOf(tonic[0]) - 1;
 
@@ -413,7 +464,7 @@ function chooseFingerings(stateTree) {
 
     bestPathFromState = {};
 
-   return chooseFingeringsRecursive(stateTree)
+    return chooseFingeringsRecursive(stateTree);
 }
 
 // Choose best fingerings for current state.
@@ -571,7 +622,7 @@ function respell(note) {
         //    "^F": "_G",
         "_G": "^F",
         "^G": "_A"
-    }
+    };
     for (var x in respellings) {
         ret = ret.replace(x, respellings[x]);
         ret = ret.replace(x.toLowerCase(), respellings[x].toLowerCase());
@@ -659,7 +710,7 @@ function generateNoteToButtonMap(buttonToNoteMap) {
         var notes  = buttonToNoteMap[buttonName].notes;
         if (notes == null) {
             log("Failed to find entry for button " + b);
-            next;
+            continue;
         }
         notes.forEach(
             function (v) {
