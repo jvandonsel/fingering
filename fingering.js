@@ -21,7 +21,9 @@ var Button = function(name, notes, cost, finger) {
 
 // Button maps
 // Lower cost means button is preferred
-// Notes are [push, pull].
+// Notes are [PUSH, DRAW].
+var PUSH_INDEX = 0;
+var DRAW_INDEX = 1;
 var baseMap = {
 
 // Top row, LH
@@ -91,11 +93,13 @@ var buttonMapIndex = {
     "CGWheatstone": wheatstoneMap
 };
 
+// called by HTML layout selector
 function setButtonToNoteMap() {
     var index = document.getElementById('layout').selectedIndex;
     var options = document.getElementById('layout').options;
     buttonToNoteMap = buttonMapIndex[options[index].value];
 }
+
 
 // Globals
 var abcOutput = "";
@@ -105,12 +109,15 @@ var bestPathFromState = null;
 var startTime = new Date().getTime();
 var stateCount = 0;
 
+var PUSH_NAME = "P";
+var DRAW_NAME = "D";
+
 function log(s) {
     if (verbose)
         console.log(s);
 }
 
-function finger(abcInput) {
+function finger(abcInput, annotateBellows) {
 
     log("Got input:"+abcInput);
 
@@ -142,7 +149,7 @@ function finger(abcInput) {
      }
 
      // Merge the chosen fingerings with the ABC notation
-     abcOutput = mergeFingerings(abcInput, path, notes);
+     abcOutput = mergeFingerings(abcInput, path, notes, annotateBellows);
 
      return abcOutput;
 
@@ -171,9 +178,10 @@ var Note = function(index, unNormalizedValue, normalizedValue) {
 };
 
 // State constructor
-var State = function(note, button) {
+var State = function(note, button, direction) {
     this.note = note;
     this.button = button;
+    this.direction = direction;
     this.nextStates = [];
     this.id = stateCount++;
 
@@ -191,29 +199,6 @@ var State = function(note, button) {
         return s;
     };
 };
-
-
-// State constructor
-var State = function(note, button) {
-    this.note = note;
-    this.button = button;
-    this.nextStates = [];
-    this.id = stateCount++;
-
-    // This toString() function is needed to make sure this object is unique
-    // in a hash map. JS can only use strings as keys in hashes (objects).
-    this.toString = function() {
-        var s = "["+this.id+"] Note:";
-        if (this.note) {
-            s += this.note.normalizedValue;
-        } else {
-            s += "none";
-        }
-
-        s += " Button:"+this.button.name;
-        return s;
-    };
-}
 
 
  // Determines the key signature
@@ -346,7 +331,7 @@ function keySignatureMap(tonic, modeFlatness) {
 // Merges an array of Button objects with an array of Notes
 // with the original string input.
 // Returns a merged string.
-function mergeFingerings(input, path, notes) {
+function mergeFingerings(input, path, notes, annotateFingerings) {
 
     // Drop the first state of the path - it's a dummy root state
     path.states.shift();
@@ -363,8 +348,14 @@ function mergeFingerings(input, path, notes) {
 
         var fingering = path.states[i].button.name;
 
-        // Add double quotes to fingering
-        fingering = "\"" + fingering + "\"";
+
+        // Add double quotes to fingering, to be rendered above the note
+        fingering = "\"^" + fingering + "\"";
+
+        // Optionally append bellows direction, to be rendered below the note.
+        if (annotateFingerings) {
+            fingering = "\"_" + path.states[i].direction + "\"" + fingering;
+        }
 
         var fingLen = fingering.length;
         //log("Merge["+i+"] index="+index+" fingLen="+fingLen+" insertedTotal="+insertedTotal);
@@ -377,6 +368,17 @@ function mergeFingerings(input, path, notes) {
     return result;
 }
 
+// Determines the bellows direction (PUSH/DRAW) given
+// a button and note.
+function findBellowsDirection(note, button) {
+    if (note.normalizedValue == button.notes[PUSH_INDEX]) {
+        return PUSH_NAME;
+    } else if (note.normalizedValue == button.notes[DRAW_INDEX]) {
+        return DRAW_NAME;
+    } else {
+        return null;
+    }
+}
 
 
 // Determines if these two buttons would be a hop if 
@@ -423,7 +425,7 @@ function generateStateTree(notes, noteToButtonMap) {
         // Create a state per button
         buttons.forEach(function(button) {
 
-            states.push(new State(note, button));
+            states.push(new State(note, button, findBellowsDirection(note, button)));
 
         });
 

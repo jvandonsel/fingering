@@ -42,21 +42,10 @@ BdAB GABc|defa g2 (3efg|fdcB cedc|(3BdB G2 G2:|
 N: No comment
    </textarea>
 
-<!--
-    <textarea id="input">
-X: 1
-T: The Ebb Tide
-R: hornpipe
-M: 4/4
-L: 1/8
-K: Gmaj
-|:B gc
-   </textarea>
--->
-
     <br><br>
     <button onClick="var abc=document.getElementById('input').value;
-                     var result=finger(abc);
+                     var annotateBellows=document.getElementById('annotateBellows').checked;
+                     var result=finger(abc, annotateBellows);
                      document.getElementById('output').value=result;
 	             abc_editor = new ABCJS.Editor('output', { paper_id: 'paper0', warnings_id:'warnings' });">
       Generate Fingerings</button>
@@ -64,6 +53,8 @@ K: Gmaj
             <option value="CGJeffries">C/G Jeffries</option>
             <option value="CGWheatstone">C/G Wheatstone</option>
         </select>  
+        &nbsp;&nbsp;
+        <input type="checkbox" id="annotateBellows">Annotate bellows directions ('P'=Push, 'D'=Draw)<br>
       <br><br>
     ABC Output, with fingerings:<br>
     <textarea id="output"></textarea>
