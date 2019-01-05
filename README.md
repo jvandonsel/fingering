@@ -7,4 +7,4 @@ ABC tune with semi-optimal fingering choices.
 
 Only supports C/G Jeffries and Wheatstone button layouts right now.
 
-For a demonstration, see http://www.jimandbarb.net/fingering/fingering.html
+For a demonstration, see https://jvandonsel.github.io/fingering/fingering.html
