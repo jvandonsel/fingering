@@ -1,0 +1,24 @@
+
+textarea {
+    width:600px;height:200px
+}
+body {
+    background-color: #fff4d2;
+}
+
+div.instructions {
+    margin-left: 50px;
+}
+
+div#paper0 {
+    margin: auto;
+    background-color: white;
+}
+
+textarea#input {
+    width: 80%;
+}
+
+textarea#output {
+    width: 80%;
+}
